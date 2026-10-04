@@ -1,0 +1,57 @@
+{
+  "cpu": [
+    {"id": "cpu-r5-5600", "name": "AMD Ryzen 5 5600", "socket": "AM4", "tdp_watts": 65, "price": 699.90},
+    {"id": "cpu-r7-5700x3d", "name": "AMD Ryzen 7 5700X3D", "socket": "AM4", "tdp_watts": 105, "price": 1399.90},
+    {"id": "cpu-r5-7600", "name": "AMD Ryzen 5 7600", "socket": "AM5", "tdp_watts": 65, "price": 1149.90},
+    {"id": "cpu-r7-7800x3d", "name": "AMD Ryzen 7 7800X3D", "socket": "AM5", "tdp_watts": 120, "price": 2599.90},
+    {"id": "cpu-r9-9950x", "name": "AMD Ryzen 9 9950X", "socket": "AM5", "tdp_watts": 170, "price": 4299.90},
+    {"id": "cpu-i5-12400f", "name": "Intel Core i5-12400F", "socket": "LGA1700", "tdp_watts": 65, "price": 749.90},
+    {"id": "cpu-i5-14600k", "name": "Intel Core i5-14600K", "socket": "LGA1700", "tdp_watts": 125, "price": 1699.90},
+    {"id": "cpu-i7-14700k", "name": "Intel Core i7-14700K", "socket": "LGA1700", "tdp_watts": 125, "price": 2399.90},
+    {"id": "cpu-ultra7-265k", "name": "Intel Core Ultra 7 265K", "socket": "LGA1851", "tdp_watts": 125, "price": 2499.90}
+  ],
+  "motherboard": [
+    {"id": "mb-b550m-aorus", "name": "Gigabyte B550M Aorus Elite", "socket": "AM4", "ram_type": "DDR4", "price": 799.90},
+    {"id": "mb-b650m-pro-rs", "name": "ASRock B650M Pro RS", "socket": "AM5", "ram_type": "DDR5", "price": 1099.90},
+    {"id": "mb-b650-tomahawk", "name": "MSI MAG B650 Tomahawk WiFi", "socket": "AM5", "ram_type": "DDR5", "price": 1699.90},
+    {"id": "mb-b760m-ddr4", "name": "MSI PRO B760M-A DDR4", "socket": "LGA1700", "ram_type": "DDR4", "price": 899.90},
+    {"id": "mb-z790-tuf", "name": "ASUS TUF Gaming Z790-Plus WiFi", "socket": "LGA1700", "ram_type": "DDR5", "price": 1999.90},
+    {"id": "mb-z890-aorus", "name": "Gigabyte Z890 Aorus Elite WiFi7", "socket": "LGA1851", "ram_type": "DDR5", "price": 2299.90}
+  ],
+  "ram": [
+    {"id": "ram-ddr4-16", "name": "Kingston Fury Beast 2x8GB 3200MHz", "ram_type": "DDR4", "capacity_gb": 16, "price": 299.90},
+    {"id": "ram-ddr4-32", "name": "Corsair Vengeance LPX 2x16GB 3600MHz", "ram_type": "DDR4", "capacity_gb": 32, "price": 549.90},
+    {"id": "ram-ddr5-16", "name": "Kingston Fury Beast 2x8GB 5600MHz", "ram_type": "DDR5", "capacity_gb": 16, "price": 449.90},
+    {"id": "ram-ddr5-32", "name": "Corsair Vengeance 2x16GB 6000MHz", "ram_type": "DDR5", "capacity_gb": 32, "price": 799.90},
+    {"id": "ram-ddr5-64", "name": "G.Skill Trident Z5 2x32GB 6400MHz", "ram_type": "DDR5", "capacity_gb": 64, "price": 1599.90}
+  ],
+  "gpu": [
+    {"id": "gpu-rtx3050", "name": "NVIDIA GeForce RTX 3050 6GB", "power_watts": 70, "price": 1199.90},
+    {"id": "gpu-rtx4060", "name": "NVIDIA GeForce RTX 4060 8GB", "power_watts": 115, "price": 1899.90},
+    {"id": "gpu-rx7600", "name": "AMD Radeon RX 7600 8GB", "power_watts": 165, "price": 1699.90},
+    {"id": "gpu-rtx5070", "name": "NVIDIA GeForce RTX 5070 12GB", "power_watts": 250, "price": 4299.90},
+    {"id": "gpu-rx9070xt", "name": "AMD Radeon RX 9070 XT 16GB", "power_watts": 304, "price": 4999.90},
+    {"id": "gpu-rtx5090", "name": "NVIDIA GeForce RTX 5090 32GB", "power_watts": 575, "price": 16999.90}
+  ],
+  "psu": [
+    {"id": "psu-cv450", "name": "Corsair CV450 80+ Bronze", "wattage": 450, "price": 299.90},
+    {"id": "psu-a650bn", "name": "MSI MAG A650BN 80+ Bronze", "wattage": 650, "price": 379.90},
+    {"id": "psu-rm750e", "name": "Corsair RM750e 80+ Gold", "wattage": 750, "price": 699.90},
+    {"id": "psu-focus-gx850", "name": "Seasonic Focus GX-850 80+ Gold", "wattage": 850, "price": 899.90},
+    {"id": "psu-rm1000x", "name": "Corsair RM1000x 80+ Gold", "wattage": 1000, "price": 1199.90}
+  ],
+  "storage": [
+    {"id": "ssd-bx500-480", "name": "Crucial BX500 480GB", "kind": "SSD SATA", "capacity_gb": 480, "price": 219.90},
+    {"id": "ssd-nv3-500", "name": "Kingston NV3 500GB", "kind": "SSD NVMe", "capacity_gb": 500, "price": 259.90},
+    {"id": "ssd-sn770-1tb", "name": "WD Black SN770 1TB", "kind": "SSD NVMe", "capacity_gb": 1000, "price": 499.90},
+    {"id": "ssd-990pro-2tb", "name": "Samsung 990 Pro 2TB", "kind": "SSD NVMe", "capacity_gb": 2000, "price": 1299.90},
+    {"id": "hd-barracuda-2tb", "name": "Seagate BarraCuda 2TB 7200RPM", "kind": "HD", "capacity_gb": 2000, "price": 399.90}
+  ],
+  "case": [
+    {"id": "case-air903", "name": "Montech Air 903 Max", "price": 399.90},
+    {"id": "case-lancool216", "name": "Lian Li Lancool 216", "price": 599.90},
+    {"id": "case-h5-flow", "name": "NZXT H5 Flow", "price": 649.90},
+    {"id": "case-4000d", "name": "Corsair 4000D Airflow", "price": 699.90},
+    {"id": "case-o11-evo", "name": "Lian Li O11 Dynamic EVO", "price": 1199.90}
+  ]
+}
