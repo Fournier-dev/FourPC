@@ -1,76 +1,73 @@
-# FourPC — Simulador de Montagem de PC
+# FourPC
 
-![Python](https://img.shields.io/badge/python-3.10%2B-3776AB?logo=python&logoColor=white)
-![Dependências](https://img.shields.io/badge/depend%C3%AAncias-nenhuma-brightgreen)
-![Tipagem](https://img.shields.io/badge/tipagem-mypy%20--strict-informational)
-![Estilo](https://img.shields.io/badge/estilo-PEP%208-informational)
+Simulador de montagem de PC feito em Python, que roda no terminal.
 
-Aplicação de linha de comando (CLI) em Python que permite montar um computador
-escolhendo peças de um catálogo, **valida automaticamente a compatibilidade
-entre os componentes** e gera um orçamento final em R$, exportável em TXT ou JSON.
+Fiz esse projeto pra praticar Python e lógica de programação. Quem vai montar o primeiro PC costuma ter várias dúvidas: esse processador encaixa nessa placa-mãe? Essa memória é compatível? Essa fonte aguenta a placa de vídeo?
 
-## O problema
+No FourPC você escolhe as peças de um catálogo e o programa vai avisando quando alguma coisa não combina. No final ele mostra o orçamento com o preço total e salva em um arquivo TXT ou JSON.
 
-Quem monta o próprio PC pela primeira vez costuma cometer erros caros:
+## O que ele faz
 
-- comprar um processador AM5 para uma placa-mãe AM4 (o processador não encaixa);
-- comprar memória DDR5 para uma placa que só aceita DDR4;
-- economizar na fonte e ficar com potência insuficiente para o processador e a placa de vídeo.
-
-O FourPC evita esses erros: ele verifica a compatibilidade **a cada peça
-escolhida**, sinaliza as opções incompatíveis **antes** de o usuário
-selecioná-las e só libera o orçamento final quando a montagem está completa
-e sem conflitos.
-
-## Funcionalidades
-
-- Catálogo com 41 peças reais em 7 categorias, carregado de um arquivo JSON.
-- Menu interativo para escolher (e trocar) as peças em qualquer ordem.
-- Opções incompatíveis marcadas com `[!]` na listagem, antes da escolha.
-- Alertas claros com o motivo do problema e uma sugestão de correção.
-- Resumo detalhado com preços, consumo de energia e status de cada regra.
-- Preços formatados em reais (ex.: `R$ 10.979,30`), calculados com `Decimal`.
-- Exportação do orçamento em `.txt`, `.json` ou ambos, na pasta `reports/`.
+- Mostra um catálogo com 41 peças (processadores, placas-mãe, memórias, placas de vídeo, fontes, SSDs/HDs e gabinetes)
+- Dá pra escolher e trocar as peças em qualquer ordem
+- Na lista de peças, as que não combinam com o que você já escolheu aparecem marcadas com `[!]`
+- Se você escolher uma peça incompatível mesmo assim, aparece um alerta explicando o problema
+- Mostra um resumo da montagem com o total em R$ e o consumo de energia
+- Só deixa finalizar quando todas as peças foram escolhidas e está tudo compatível
+- Salva o orçamento em `.txt` e/ou `.json` na pasta `reports/`
 
 ## Regras de compatibilidade
 
-| # | Regra | Peças envolvidas | Condição para aprovar | Exemplo de erro |
-|---|-------|------------------|-----------------------|-----------------|
-| 1 | Soquete CPU x Placa-Mãe | Processador, Placa-Mãe | `cpu.socket == placa.socket` | Ryzen 7 7800X3D (AM5) + B550M (AM4) |
-| 2 | Tecnologia de RAM x Placa-Mãe | Memória RAM, Placa-Mãe | `ram.tipo == placa.tipo_ram` (DDR4/DDR5) | Memória DDR5 + placa B760M DDR4 |
-| 3 | Dimensionamento da Fonte | Processador, Placa de Vídeo, Fonte | `fonte ≥ (TDP da CPU + consumo da GPU) × 1,20` | 120 W + 304 W = 424 W → exige 509 W; fonte de 450 W reprovada |
+| Regra | Como funciona |
+|-------|---------------|
+| Soquete | O soquete do processador tem que ser igual ao da placa-mãe (ex.: AM5 com AM5) |
+| Memória RAM | A memória tem que ser do mesmo tipo que a placa-mãe aceita (DDR4 ou DDR5) |
+| Fonte | A potência da fonte tem que ser maior ou igual ao consumo do processador + placa de vídeo, com 20% de margem |
 
-Cada regra tem três estados possíveis: **`[ OK ]`** aprovada, **`[ERRO]`**
-violada e **`[ -- ]`** pendente (ainda faltam peças para avaliar). O resultado
-da regra 3 é arredondado para cima (`361,2 W` → `362 W`).
+Exemplo da regra da fonte: um Ryzen 7 7800X3D (120 W) com uma RX 9070 XT (304 W) consome 424 W. Somando 20% de margem dá 508,8 W, então a fonte precisa ter pelo menos 509 W. Uma fonte de 450 W não passa.
 
-## Como executar
+## Como rodar
 
-**Pré-requisito:** Python 3.10 ou superior. Não há dependências externas — apenas
-a biblioteca padrão (`json`, `pathlib`, `dataclasses`, `decimal`, `typing`...).
+Precisa ter o Python 3.10 ou mais novo instalado. Não precisa instalar nenhuma biblioteca, o projeto só usa o que já vem com o Python.
+
+1. Clone o repositório:
 
 ```bash
-# 1. Clone o repositório
 git clone https://github.com/Fournier-dev/FourPC.git
+```
 
-# 2. Entre na pasta do projeto
+2. Entre na pasta do projeto:
+
+```bash
 cd FourPC
+```
 
-# 3. Execute o simulador
+3. Rode o programa:
+
+```bash
 python main.py
 ```
 
-> No Windows, se o comando `python` não for reconhecido, use `py main.py`.
+No Windows, se o comando `python` não funcionar, tente `py main.py`.
 
-Para rodar os testes automatizados:
+### Usando o menu
+
+- `1` a `7`: escolhe a peça de cada categoria
+- `8`: mostra o resumo com os preços e a compatibilidade
+- `9`: finaliza e salva o orçamento
+- `0`: sai do programa
+
+### Testes
+
+Também fiz alguns testes com o `unittest` pra conferir as regras, os preços e o menu. Pra rodar:
 
 ```bash
-python -m unittest -v
+python -m unittest
 ```
 
-## Demonstração
+## Como ficou
 
-As opções incompatíveis com as peças já escolhidas são sinalizadas na listagem:
+Depois de escolher um processador AM5, as placas-mãe de outro soquete aparecem marcadas na lista:
 
 ```text
 ------------------------------------------------------------------------
@@ -86,7 +83,7 @@ PLACA-MÃE - escolha uma opção
    0) Voltar
 ```
 
-Se o usuário escolher mesmo assim, o alerta explica o problema e sugere a correção:
+Se escolher uma delas mesmo assim, aparece o alerta:
 
 ```text
 ALERTA DE COMPATIBILIDADE
@@ -96,6 +93,8 @@ ALERTA DE COMPATIBILIDADE
          Sugestão: escolha uma placa-mãe AM5 ou um processador AM4.
 ```
 
+E o mesmo acontece com a fonte:
+
 ```text
 ALERTA DE COMPATIBILIDADE
   [ERRO] Dimensionamento da Fonte
@@ -104,12 +103,9 @@ ALERTA DE COMPATIBILIDADE
          Sugestão: escolha uma fonte de pelo menos 509 W.
 ```
 
-Enquanto houver peças faltando ou incompatibilidades, a opção **Finalizar**
-lista o que precisa ser corrigido e não gera o orçamento.
+## Exemplo de orçamento gerado
 
-## Exemplo de relatório gerado
-
-Arquivo `reports/orcamento_20261004_040801.txt`:
+Esse é o arquivo `.txt` que o programa salva na pasta `reports/`:
 
 ```text
 ========================================================================
@@ -157,108 +153,41 @@ Preços e consumos são estimativas para fins de simulação.
 ========================================================================
 ```
 
-A versão JSON traz os mesmos dados de forma estruturada (trecho):
-
-```json
-{
-  "project": "FourPC",
-  "generated_at": "2026-10-04T04:08:01",
-  "components": [
-    {
-      "category": "cpu",
-      "category_label": "Processador",
-      "id": "cpu-r7-7800x3d",
-      "name": "AMD Ryzen 7 7800X3D",
-      "price": "2599.90",
-      "socket": "AM5",
-      "tdp_watts": 120
-    }
-  ],
-  "power": {
-    "estimated_load_watts": 424,
-    "required_psu_watts": 509,
-    "psu_watts": 650
-  },
-  "total_price": "10979.30",
-  "total_price_formatted": "R$ 10.979,30"
-}
-```
+O `.json` tem as mesmas informações, só que organizadas pra ser lidas por outro programa.
 
 ## Estrutura do projeto
 
 ```text
 FourPC/
-├── main.py              # Ponto de entrada e interface interativa (CLI)
+├── main.py              # menu e interação com o usuário
 ├── core/
-│   ├── models.py        # Peças (dataclasses) e a montagem (Build)
-│   ├── catalog.py       # Leitura e validação do catálogo JSON
-│   ├── validators.py    # Regras de compatibilidade
-│   └── report.py        # Resumo, formatação em R$ e exportação TXT/JSON
+│   ├── models.py        # classes das peças e da montagem
+│   ├── catalog.py       # lê o catálogo de peças do JSON
+│   ├── validators.py    # regras de compatibilidade
+│   └── report.py        # resumo, formatação em R$ e exportação
 ├── data/
-│   └── catalog.json     # Catálogo de peças
-├── tests/               # Testes automatizados (unittest)
-└── reports/             # Orçamentos exportados (criada automaticamente)
+│   └── catalog.json     # catálogo de peças
+└── tests/               # testes
 ```
 
-## Decisões de arquitetura
+Pra adicionar uma peça nova é só colocar ela no `data/catalog.json`, seguindo o formato das outras da mesma categoria.
 
-- **Lógica de negócio separada da interface.** Todo o domínio fica em `core/`
-  e não usa `print` nem `input`; o `main.py` apenas orquestra a interação.
-  Isso permite reaproveitar o núcleo em uma API ou interface gráfica.
-- **Regras como funções puras.** Cada regra recebe uma `Build` e devolve um
-  `RuleResult` (OK, ERRO ou PENDENTE). Para criar uma nova regra basta
-  escrever uma função e adicioná-la à tupla `RULES` em `validators.py`.
-- **Montagem imutável.** `Build.with_component()` devolve uma nova montagem.
-  É assim que a CLI "simula" cada opção da lista para marcar as incompatíveis
-  sem alterar a montagem real.
-- **Dinheiro com `Decimal`.** Preços nunca usam `float`, evitando erros de
-  arredondamento (`0.1 + 0.2 != 0.3`). O mesmo vale para o cálculo da fonte:
-  com `float`, `300 * 1.2` resulta em `360.00000000000006`, o que exigiria
-  uma fonte de 361 W em vez de 360 W — há um teste cobrindo esse caso.
-- **Catálogo orientado a dados.** Novas peças são adicionadas só editando o
-  JSON. O carregamento valida campos obrigatórios, tipos, IDs duplicados e
-  padrões de RAM desconhecidos, com mensagens de erro que apontam a peça.
-- **CLI testável.** As funções de entrada e saída são injetadas na
-  `FourPCApp`, o que permite testes de ponta a ponta simulando o usuário.
+## O que eu aprendi
 
-## Qualidade de código
+- Separar a lógica do programa (pasta `core/`) da parte que conversa com o usuário (`main.py`)
+- Usar `dataclasses` e `Enum` pra organizar os dados das peças
+- Não usar `float` pra dinheiro: com float, `0.1 + 0.2` dá `0.30000000000000004`. Por isso usei `Decimal` nos preços e no cálculo da fonte
+- Ler e validar um arquivo JSON
+- Escrever testes com `unittest`, inclusive simulando alguém usando o menu
 
-- Type hints em todas as funções, classes e métodos (validado com `mypy --strict`).
-- Código aderente à PEP 8 (validado com `pycodestyle`).
-- 59 testes automatizados cobrindo modelos, catálogo, regras, relatórios e a
-  CLI — incluindo testes de integridade do próprio catálogo (todo processador
-  tem ao menos uma placa-mãe compatível, por exemplo).
+## Ideias pra melhorar
 
-## Adicionando peças ao catálogo
-
-Edite `data/catalog.json` e inclua um objeto na lista da categoria desejada.
-Todos os itens têm `id` (único), `name` e `price`; os demais campos dependem
-da categoria:
-
-| Categoria (`chave`) | Campos específicos |
-|---------------------|--------------------|
-| Processador (`cpu`) | `socket`, `tdp_watts` |
-| Placa-Mãe (`motherboard`) | `socket`, `ram_type` (`"DDR4"` ou `"DDR5"`) |
-| Memória RAM (`ram`) | `ram_type`, `capacity_gb` |
-| Placa de Vídeo (`gpu`) | `power_watts` |
-| Fonte (`psu`) | `wattage` |
-| Armazenamento (`storage`) | `kind` (ex.: `"SSD NVMe"`, `"HD"`), `capacity_gb` |
-| Gabinete (`case`) | — |
-
-```json
-{"id": "cpu-r5-9600x", "name": "AMD Ryzen 5 9600X", "socket": "AM5", "tdp_watts": 65, "price": 1599.90}
-```
-
-## Próximos passos
-
-- Compatibilidade de formato (ATX, mATX, ITX) entre placa-mãe e gabinete.
-- Suporte a mais de um dispositivo de armazenamento por montagem.
-- Montagens sugeridas por faixa de orçamento.
-- Interface web consumindo o mesmo núcleo (`core/`).
+- Verificar se a placa-mãe cabe no gabinete (ATX, mATX, ITX)
+- Permitir mais de um SSD/HD na mesma montagem
+- Fazer uma versão com interface gráfica ou web
 
 ## Autor
 
-Desenvolvido por [Fournier-dev](https://github.com/Fournier-dev).
+Feito por [Fournier-dev](https://github.com/Fournier-dev).
 
-> Os preços e consumos do catálogo são aproximados e servem apenas para fins
-> de simulação.
+Obs.: os preços e consumos das peças são aproximados, servem só pra simulação.
