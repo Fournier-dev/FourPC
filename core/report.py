@@ -1,5 +1,3 @@
-"""Geração do orçamento: resumo em texto, versão JSON e exportação."""
-
 import json
 import textwrap
 from dataclasses import asdict
@@ -15,6 +13,7 @@ from core.validators import (
     find_issues, required_psu_wattage,
 )
 
+# larguras das colunas do relatório
 REPORT_WIDTH = 72
 LABEL_WIDTH = 16
 PRICE_WIDTH = 16
@@ -29,8 +28,6 @@ STATUS_TAGS: dict[Status, str] = {
     Status.PENDING: "[ -- ]",
 }
 
-_BRL_SEPARATORS = str.maketrans(",.", ".,")
-
 
 class ExportFormat(str, Enum):
     TXT = "txt"
@@ -38,24 +35,26 @@ class ExportFormat(str, Enum):
 
 
 class BuildNotReadyError(Exception):
-    """A montagem está incompleta ou tem incompatibilidades."""
+    pass
 
 
+# Fiz a formatação na mão em vez de usar o módulo locale, porque o locale
+# depende da configuração de cada computador.
+# Ex.: 1299.9 -> "R$ 1.299,90"
 def format_brl(value: Decimal) -> str:
-    """Formata um valor no padrão monetário brasileiro (ex.: R$ 1.299,90).
-
-    Não depende do ``locale`` do sistema, que varia entre máquinas.
-    """
-    return "R$ " + f"{value:,.2f}".translate(_BRL_SEPARATORS)
+    us_format = f"{value:,.2f}"  # 1,299.90
+    br_format = us_format.replace(",", "_").replace(".", ",")
+    return "R$ " + br_format.replace("_", ".")
 
 
+# corta o texto se ele não couber na coluna
 def fit(text: str, width: int) -> str:
-    """Trunca o texto com reticências caso ele exceda a largura."""
-    return text if len(text) <= width else text[: width - 1] + "…"
+    if len(text) <= width:
+        return text
+    return text[: width - 1] + "…"
 
 
 def format_result(result: RuleResult, indent: str = "  ") -> list[str]:
-    """Formata o resultado de uma regra em linhas com quebra automática."""
     tag = STATUS_TAGS[result.status]
     body_indent = indent + " " * (len(tag) + 1)
     lines = [f"{indent}{tag} {result.rule}"]
@@ -72,11 +71,12 @@ def format_result(result: RuleResult, indent: str = "  ") -> list[str]:
 
 
 def _row(label: str, text: str, price: str = "") -> str:
-    return (
+    line = (
         f"{label:<{LABEL_WIDTH}}"
         f"{fit(text, NAME_WIDTH):<{NAME_WIDTH}}"
         f"{price:>{PRICE_WIDTH}}"
-    ).rstrip()
+    )
+    return line.rstrip()
 
 
 def _key_value(label: str, value: str) -> str:
@@ -95,7 +95,8 @@ def _components_section(build: Build) -> list[str]:
         )
         if component.specs():
             lines.append(_row("", component.specs()))
-    lines += [THIN_LINE, _row("TOTAL", "", format_brl(build.total_price))]
+    lines.append(THIN_LINE)
+    lines.append(_row("TOTAL", "", format_brl(build.total_price)))
     return lines
 
 
@@ -107,20 +108,18 @@ def _power_section(build: Build) -> list[str]:
             "  Selecione processador e placa de vídeo para estimar o consumo."
         )
         return lines
-    lines += [
-        _key_value(
-            "Consumo estimado (CPU + GPU)",
-            f"{estimated_load_watts(cpu, gpu)} W",
-        ),
-        _key_value(
-            f"Fonte mínima recomendada (+{PSU_SAFETY_MARGIN:.0%})",
-            f"{required_psu_wattage(cpu, gpu)} W",
-        ),
-        _key_value(
-            "Fonte selecionada",
-            f"{psu.wattage} W" if psu is not None else "-",
-        ),
-    ]
+
+    load = estimated_load_watts(cpu, gpu)
+    required = required_psu_wattage(cpu, gpu)
+    margin = f"{PSU_SAFETY_MARGIN:.0%}"
+    lines.append(_key_value("Consumo estimado (CPU + GPU)", f"{load} W"))
+    lines.append(
+        _key_value(f"Fonte mínima recomendada (+{margin})", f"{required} W")
+    )
+    if psu is not None:
+        lines.append(_key_value("Fonte selecionada", f"{psu.wattage} W"))
+    else:
+        lines.append(_key_value("Fonte selecionada", "-"))
     return lines
 
 
@@ -132,7 +131,6 @@ def _compatibility_section(build: Build) -> list[str]:
 
 
 def status_message(build: Build) -> str:
-    """Frase curta que resume se a montagem está pronta para compra."""
     issues = find_issues(build)
     if issues:
         return (
@@ -147,20 +145,18 @@ def status_message(build: Build) -> str:
 
 
 def render_summary(build: Build) -> str:
-    """Resumo detalhado da montagem: peças, preços, energia e regras."""
-    sections = [
-        _components_section(build),
-        _power_section(build),
-        _compatibility_section(build),
-    ]
-    return "\n\n".join("\n".join(section) for section in sections)
+    components = "\n".join(_components_section(build))
+    power = "\n".join(_power_section(build))
+    compatibility = "\n".join(_compatibility_section(build))
+    return f"{components}\n\n{power}\n\n{compatibility}"
 
 
+# relatório completo, é o que vai pro arquivo .txt
 def render_report(build: Build, generated_at: datetime) -> str:
-    """Relatório completo do orçamento, usado na exportação em TXT."""
+    title = "FourPC - Orçamento de Montagem de PC".center(REPORT_WIDTH)
     header = [
         THICK_LINE,
-        "FourPC - Orçamento de Montagem de PC".center(REPORT_WIDTH).rstrip(),
+        title.rstrip(),
         THICK_LINE,
         f"Gerado em {generated_at:%d/%m/%Y} às {generated_at:%H:%M}",
     ]
@@ -170,13 +166,14 @@ def render_report(build: Build, generated_at: datetime) -> str:
         "Preços e consumos são estimativas para fins de simulação.",
         THICK_LINE,
     ]
-    return "\n\n".join([
-        "\n".join(header),
-        render_summary(build),
-        "\n".join(footer),
-    ])
+    return (
+        "\n".join(header) + "\n\n"
+        + render_summary(build) + "\n\n"
+        + "\n".join(footer)
+    )
 
 
+# o json não sabe salvar Decimal nem Enum, então converto antes
 def _json_value(value: Any) -> Any:
     if isinstance(value, Enum):
         return value.value
@@ -190,19 +187,15 @@ def _component_to_dict(component: Component) -> dict[str, Any]:
         "category": component.category.value,
         "category_label": component.category.label,
     }
-    data.update(
-        (key, _json_value(value)) for key, value in asdict(component).items()
-    )
+    for key, value in asdict(component).items():
+        data[key] = _json_value(value)
     return data
 
 
+# os preços vão como texto ("1299.90") pra não perder as casas decimais
 def to_dict(build: Build, generated_at: datetime) -> dict[str, Any]:
-    """Representação serializável do orçamento, usada na exportação JSON.
-
-    Valores monetários são gravados como texto para preservar a
-    precisão decimal (ex.: "1299.90").
-    """
     total = build.total_price.quantize(Decimal("0.01"))
+
     power: dict[str, int] | None = None
     if build.cpu is not None and build.gpu is not None:
         power = {
@@ -211,19 +204,21 @@ def to_dict(build: Build, generated_at: datetime) -> dict[str, Any]:
         }
         if build.psu is not None:
             power["psu_watts"] = build.psu.wattage
+
+    compatibility: list[dict[str, str]] = []
+    for result in check_all(build):
+        compatibility.append({
+            "rule": result.rule,
+            "status": result.status.value,
+            "message": result.message,
+        })
+
     return {
         "project": "FourPC",
         "generated_at": generated_at.isoformat(timespec="seconds"),
         "components": [_component_to_dict(c) for c in build.selected()],
         "power": power,
-        "compatibility": [
-            {
-                "rule": result.rule,
-                "status": result.status.value,
-                "message": result.message,
-            }
-            for result in check_all(build)
-        ],
+        "compatibility": compatibility,
         "total_price": str(total),
         "total_price_formatted": format_brl(total),
     }
@@ -235,14 +230,12 @@ def export_report(
     fmt: ExportFormat,
     generated_at: datetime | None = None,
 ) -> Path:
-    """Grava o orçamento em ``directory`` e retorna o caminho do arquivo.
-
-    Só permite exportar montagens completas e sem incompatibilidades.
-    """
+    # não deixa exportar montagem incompleta ou com incompatibilidade
     if not build.is_complete or find_issues(build):
         raise BuildNotReadyError(status_message(build))
 
-    generated_at = generated_at or datetime.now()
+    if generated_at is None:
+        generated_at = datetime.now()
     directory.mkdir(parents=True, exist_ok=True)
     path = directory / f"orcamento_{generated_at:%Y%m%d_%H%M%S}.{fmt.value}"
 

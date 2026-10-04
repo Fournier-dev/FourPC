@@ -1,5 +1,3 @@
-"""Carregamento e consulta do catálogo de peças (data/catalog.json)."""
-
 import json
 from collections.abc import Callable, Mapping
 from decimal import Decimal
@@ -17,9 +15,10 @@ DEFAULT_CATALOG_PATH = (
 
 
 class CatalogError(Exception):
-    """Catálogo ausente, malformado ou com peças inválidas."""
+    pass
 
 
+# campos que todas as peças têm
 def _base_fields(data: Mapping[str, Any]) -> dict[str, Any]:
     return {
         "id": str(data["id"]),
@@ -72,6 +71,7 @@ def _parse_case(data: Mapping[str, Any]) -> Case:
     return Case(**_base_fields(data))
 
 
+# qual função usar pra ler cada categoria do JSON
 _PARSERS: dict[Category, Callable[[Mapping[str, Any]], Component]] = {
     Category.CPU: _parse_cpu,
     Category.MOTHERBOARD: _parse_motherboard,
@@ -103,16 +103,12 @@ def _parse_component(category: Category, entry: Any) -> Component:
 
 
 class Catalog:
-    """Conjunto de peças disponíveis, organizado por categoria."""
-
     def __init__(self, components: Mapping[Category, list[Component]]) -> None:
-        self._by_category: dict[Category, list[Component]] = {
-            category: list(components.get(category, []))
-            for category in Category
-        }
+        self._by_category: dict[Category, list[Component]] = {}
         self._by_id: dict[str, Component] = {}
-        for options in self._by_category.values():
-            for component in options:
+        for category in Category:
+            self._by_category[category] = list(components.get(category, []))
+            for component in self._by_category[category]:
                 if component.id in self._by_id:
                     raise CatalogError(
                         f"ID duplicado no catálogo: '{component.id}'."
@@ -121,8 +117,8 @@ class Catalog:
 
     @classmethod
     def from_json(cls, path: Path = DEFAULT_CATALOG_PATH) -> "Catalog":
-        """Lê e valida o catálogo a partir de um arquivo JSON."""
         try:
+            # parse_float=Decimal pra não perder precisão nos preços
             raw = json.loads(
                 path.read_text(encoding="utf-8"), parse_float=Decimal
             )
@@ -142,7 +138,7 @@ class Catalog:
         components: dict[Category, list[Component]] = {}
         for category in Category:
             entries = raw.get(category.value)
-            if not isinstance(entries, list) or not entries:
+            if not isinstance(entries, list) or len(entries) == 0:
                 raise CatalogError(
                     f"A categoria '{category.value}' está ausente ou vazia "
                     "no catálogo."
@@ -153,14 +149,7 @@ class Catalog:
         return cls(components)
 
     def options(self, category: Category) -> list[Component]:
-        """Peças disponíveis na categoria, na ordem do catálogo."""
         return list(self._by_category[category])
 
     def get(self, component_id: str) -> Component:
-        """Busca uma peça pelo ID. Lança ``KeyError`` se não existir."""
-        try:
-            return self._by_id[component_id]
-        except KeyError:
-            raise KeyError(
-                f"Peça não encontrada no catálogo: '{component_id}'"
-            ) from None
+        return self._by_id[component_id]

@@ -1,8 +1,5 @@
-"""FourPC - Simulador de Montagem de PC.
-
-Ponto de entrada e interface interativa de linha de comando.
-Execute com: python main.py
-"""
+# FourPC - Simulador de Montagem de PC
+# Pra rodar: python main.py
 
 import io
 import sys
@@ -28,28 +25,25 @@ LOGO = (
     r"|_|     \___/  \__,_||_|   |_|     \____|",
 )
 
+# opções do menu principal: 1 a 7 são as categorias
 CATEGORIES = list(Category)
 EXIT_OPTION = 0
-SUMMARY_OPTION = len(CATEGORIES) + 1
-FINALIZE_OPTION = len(CATEGORIES) + 2
+SUMMARY_OPTION = 8
+FINALIZE_OPTION = 9
 
-EXPORT_CHOICES: dict[int, tuple[ExportFormat, ...]] = {
-    1: (ExportFormat.TXT,),
-    2: (ExportFormat.JSON,),
-    3: (ExportFormat.TXT, ExportFormat.JSON),
+EXPORT_CHOICES: dict[int, list[ExportFormat]] = {
+    1: [ExportFormat.TXT],
+    2: [ExportFormat.JSON],
+    3: [ExportFormat.TXT, ExportFormat.JSON],
 }
 
 InputFunc = Callable[[str], str]
 OutputFunc = Callable[[str], None]
 
 
+# Recebe o input e o print como parâmetro pra eu conseguir trocar eles
+# nos testes e simular o usuário digitando.
 class FourPCApp:
-    """Sessão interativa de montagem de um PC.
-
-    As funções de entrada e saída são injetáveis, o que permite testar a
-    interface simulando o que o usuário digita.
-    """
-
     def __init__(
         self,
         catalog: Catalog,
@@ -64,7 +58,6 @@ class FourPCApp:
         self._print = output_func
 
     def run(self) -> None:
-        """Executa o menu principal até o usuário sair ou exportar."""
         self._show_banner()
         while True:
             self._show_main_menu()
@@ -83,10 +76,6 @@ class FourPCApp:
                     return
             else:
                 self._choose_component(CATEGORIES[choice - 1])
-
-    # ------------------------------------------------------------------
-    # Telas
-    # ------------------------------------------------------------------
 
     def _show_banner(self) -> None:
         logo_width = max(len(line) for line in LOGO)
@@ -111,12 +100,14 @@ class FourPCApp:
         self._print(THIN_LINE)
         for number, category in enumerate(CATEGORIES, start=1):
             component = self.build.get(category)
-            name = component.name if component else "(não selecionado)"
-            price = format_brl(component.price) if component else ""
-            self._print(
-                f"  {number}) {category.label:<16}{fit(name, 36):<36}"
-                f"{price:>15}".rstrip()
-            )
+            if component is None:
+                name = "(não selecionado)"
+                price = ""
+            else:
+                name = component.name
+                price = format_brl(component.price)
+            line = f"  {number}) {category.label:<16}{fit(name, 36):<36}"
+            self._print(f"{line}{price:>15}".rstrip())
         self._print(THIN_LINE)
         total = format_brl(self.build.total_price)
         self._print(f"{'Total parcial':>20}{total:>52}")
@@ -147,11 +138,13 @@ class FourPCApp:
         self._print(THIN_LINE)
         for number, option in enumerate(options, start=1):
             marker = ">" if option == current else " "
+            name = fit(option.name, 36)
+            specs = fit(option.specs(), 15)
+            price = format_brl(option.price)
             self._print(
-                f"{marker} {number:>2}) {fit(option.name, 36):<36} "
-                f"{fit(option.specs(), 15):<15} "
-                f"{format_brl(option.price):>13}".rstrip()
+                f"{marker} {number:>2}) {name:<36} {specs:<15} {price:>13}"
             )
+            # avisa antes de escolher se a peça vai dar problema
             for rule in self._conflicts_with(option):
                 self._print(f"      [!] Incompatível: {rule}")
         self._print("   0) Voltar")
@@ -168,10 +161,10 @@ class FourPCApp:
         self._show_alerts_for(category)
 
     def _show_alerts_for(self, category: Category) -> None:
-        issues = [
-            issue for issue in find_issues(self.build)
-            if issue.involves(category)
-        ]
+        issues = []
+        for issue in find_issues(self.build):
+            if issue.involves(category):
+                issues.append(issue)
         if not issues:
             return
         self._print("\nALERTA DE COMPATIBILIDADE")
@@ -189,8 +182,8 @@ class FourPCApp:
         self._print(f"Status: {status_message(self.build)}")
         self._input("\nPressione Enter para voltar ao menu...")
 
+    # retorna True se conseguiu exportar o orçamento
     def _finalize(self) -> bool:
-        """Valida e exporta o orçamento. Retorna True se exportou."""
         missing = self.build.missing_categories()
         if missing:
             names = ", ".join(category.label for category in missing)
@@ -220,16 +213,19 @@ class FourPCApp:
         self._print("  2) JSON")
         self._print("  3) TXT e JSON")
         self._print("  0) Voltar ao menu")
-        choice = self._ask_option("Escolha uma opção: ", len(EXPORT_CHOICES))
+        choice = self._ask_option("Escolha uma opção: ", 3)
         if choice == 0:
             return False
 
+        # mesma data/hora pros dois arquivos terem o mesmo nome
         generated_at = datetime.now()
+        paths = []
         try:
-            paths = [
-                export_report(self.build, self.reports_dir, fmt, generated_at)
-                for fmt in EXPORT_CHOICES[choice]
-            ]
+            for fmt in EXPORT_CHOICES[choice]:
+                path = export_report(
+                    self.build, self.reports_dir, fmt, generated_at
+                )
+                paths.append(path)
         except OSError as error:
             self._print(f"\nNão foi possível salvar o orçamento: {error}")
             return False
@@ -240,39 +236,31 @@ class FourPCApp:
         self._print("\nObrigado por usar o FourPC!")
         return True
 
-    # ------------------------------------------------------------------
-    # Auxiliares
-    # ------------------------------------------------------------------
-
+    # regras que dariam erro se essa peça fosse escolhida agora
     def _conflicts_with(self, option: Component) -> list[str]:
-        """Regras que seriam violadas se a peça fosse escolhida agora."""
-        candidate = self.build.with_component(option)
-        return [
-            issue.rule for issue in find_issues(candidate)
-            if issue.involves(option.category)
-        ]
+        test_build = self.build.with_component(option)
+        rules = []
+        for issue in find_issues(test_build):
+            if issue.involves(option.category):
+                rules.append(issue.rule)
+        return rules
 
+    # fica perguntando até a pessoa digitar um número válido
     def _ask_option(self, prompt: str, max_option: int) -> int:
-        """Lê um número entre 0 e ``max_option``, repetindo se inválido."""
         while True:
             answer = self._input(prompt).strip()
-            try:
-                choice = int(answer)
-            except ValueError:
-                choice = -1
-            if 0 <= choice <= max_option:
-                return choice
+            if answer.isdecimal() and int(answer) <= max_option:
+                return int(answer)
             self._print(
                 f"Opção inválida. Digite um número de 0 a {max_option}."
             )
 
     def _confirm(self, prompt: str) -> bool:
-        return self._input(prompt).strip().lower() in {"s", "sim"}
+        return self._input(prompt).strip().lower() in ("s", "sim")
 
 
+# sem isso a acentuação sai errada em alguns terminais (tipo o Git Bash)
 def _use_utf8_output() -> None:
-    """Mantém a acentuação correta quando a saída não é um console nativo
-    do Windows (ex.: Git Bash ou saída redirecionada para arquivo)."""
     for stream in (sys.stdout, sys.stderr):
         if isinstance(stream, io.TextIOWrapper):
             stream.reconfigure(encoding="utf-8")

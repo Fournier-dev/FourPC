@@ -1,5 +1,3 @@
-"""Testes de ponta a ponta da CLI, simulando o que o usuário digita."""
-
 import json
 import tempfile
 import unittest
@@ -15,8 +13,9 @@ from tests.helpers import (
 )
 
 
+# catálogo pequeno pros testes: 2 opções por categoria e a opção 1
+# é sempre a compatível
 def small_catalog() -> Catalog:
-    """Duas opções por categoria; a opção 1 é sempre a compatível."""
     components: dict[Category, list[Component]] = {
         Category.CPU: [
             make_cpu("AM5", component_id="cpu-am5"),
@@ -50,17 +49,17 @@ def small_catalog() -> Catalog:
     return Catalog(components)
 
 
+# escolhe a opção 1 em todas as 7 categorias
 def select_all_first_options() -> list[str]:
-    """Entradas que escolhem a opção 1 em cada uma das 7 categorias."""
     inputs: list[str] = []
     for menu_option in range(1, 8):
         inputs += [str(menu_option), "1"]
     return inputs
 
 
+# finge ser o terminal: vai devolvendo as respostas da lista e guarda
+# tudo que foi impresso
 class ScriptedSession:
-    """Simula o terminal: fornece entradas pré-definidas e guarda a saída."""
-
     def __init__(self, inputs: Iterable[str]) -> None:
         self._inputs = iter(inputs)
         self.lines: list[str] = []

@@ -1,4 +1,5 @@
-"""Fábricas de peças para os testes, com padrões compatíveis entre si."""
+# funções pra criar peças rápido nos testes
+# os valores padrão já são compatíveis entre si
 
 from decimal import Decimal
 
@@ -58,8 +59,8 @@ def make_case(price: str = "300.00", component_id: str = "case-test") -> Case:
     return Case(component_id, "Gabinete Teste", Decimal(price))
 
 
+# montagem completa e sem erro, total de R$ 5.400,00
 def make_complete_build() -> Build:
-    """Montagem completa e compatível. Total: R$ 5.400,00."""
     build = Build()
     for component in (
         make_cpu(), make_motherboard(), make_ram(), make_gpu(), make_psu(),

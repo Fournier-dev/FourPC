@@ -1,18 +1,12 @@
-"""Estruturas de dados das peças de hardware e da montagem (Build)."""
-
 from dataclasses import dataclass, replace
 from decimal import Decimal
 from enum import Enum
 from typing import Any, ClassVar
 
 
+# O valor de cada categoria é a chave usada no catalog.json e também
+# o nome do campo correspondente na classe Build.
 class Category(str, Enum):
-    """Categorias de peças.
-
-    O valor de cada membro é, ao mesmo tempo, a chave da categoria no
-    catálogo JSON e o nome do atributo correspondente em ``Build``.
-    """
-
     CPU = "cpu"
     MOTHERBOARD = "motherboard"
     RAM = "ram"
@@ -23,7 +17,6 @@ class Category(str, Enum):
 
     @property
     def label(self) -> str:
-        """Nome da categoria para exibição ao usuário."""
         return CATEGORY_LABELS[self]
 
 
@@ -39,16 +32,13 @@ CATEGORY_LABELS: dict[Category, str] = {
 
 
 class RamType(str, Enum):
-    """Padrões de memória RAM suportados."""
-
     DDR4 = "DDR4"
     DDR5 = "DDR5"
 
 
+# classe base com o que toda peça tem
 @dataclass(frozen=True)
 class Component:
-    """Atributos comuns a todas as peças do catálogo."""
-
     category: ClassVar[Category]
 
     id: str
@@ -61,8 +51,8 @@ class Component:
         if self.price < 0:
             raise ValueError(f"A peça '{self.id}' tem preço negativo.")
 
+    # cada tipo de peça sobrescreve pra mostrar as specs dela
     def specs(self) -> str:
-        """Resumo curto das especificações técnicas, exibido junto ao nome."""
         return ""
 
 
@@ -135,23 +125,20 @@ class Case(Component):
     category: ClassVar[Category] = Category.CASE
 
 
+# 480 -> "480 GB", 1000 -> "1 TB", 1500 -> "1,5 TB"
 def format_capacity(capacity_gb: int) -> str:
-    """Formata a capacidade em GB ou TB (ex.: 480 GB, 1 TB, 1,5 TB)."""
     if capacity_gb < 1000:
         return f"{capacity_gb} GB"
     terabytes = Decimal(capacity_gb) / 1000
     return f"{terabytes.normalize():f} TB".replace(".", ",")
 
 
+# A montagem guarda uma peça de cada categoria.
+# Deixei ela imutável (frozen=True): pra trocar uma peça eu crio uma Build
+# nova. Assim dá pra "testar" uma peça antes de escolher sem mexer na
+# montagem atual.
 @dataclass(frozen=True)
 class Build:
-    """Montagem em andamento, com no máximo uma peça por categoria.
-
-    É imutável: cada seleção gera uma nova ``Build`` através de
-    ``with_component``, o que facilita simular trocas de peças sem
-    alterar a montagem atual.
-    """
-
     cpu: CPU | None = None
     motherboard: Motherboard | None = None
     ram: RAM | None = None
@@ -161,27 +148,32 @@ class Build:
     case: Case | None = None
 
     def with_component(self, component: Component) -> "Build":
-        """Retorna uma nova montagem com a peça adicionada (ou substituída)."""
+        # se já tiver uma peça dessa categoria, ela é substituída
         changes: dict[str, Any] = {component.category.value: component}
         return replace(self, **changes)
 
     def get(self, category: Category) -> Component | None:
-        """Retorna a peça selecionada na categoria, se houver."""
         component: Component | None = getattr(self, category.value)
         return component
 
     def selected(self) -> list[Component]:
-        """Peças selecionadas, na ordem das categorias."""
-        return [c for c in map(self.get, Category) if c is not None]
+        components: list[Component] = []
+        for category in Category:
+            component = self.get(category)
+            if component is not None:
+                components.append(component)
+        return components
 
     def missing_categories(self) -> list[Category]:
-        """Categorias que ainda não têm peça selecionada."""
         return [cat for cat in Category if self.get(cat) is None]
 
     @property
     def is_complete(self) -> bool:
-        return not self.missing_categories()
+        return len(self.missing_categories()) == 0
 
     @property
     def total_price(self) -> Decimal:
-        return sum((c.price for c in self.selected()), Decimal("0"))
+        total = Decimal("0")
+        for component in self.selected():
+            total += component.price
+        return total

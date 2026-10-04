@@ -110,9 +110,8 @@ class CatalogQueryTest(unittest.TestCase):
             Catalog({}).get("nao-existe")
 
 
+# confere se o data/catalog.json de verdade está certinho
 class DefaultCatalogTest(unittest.TestCase):
-    """Garante a integridade do catálogo distribuído em data/catalog.json."""
-
     catalog: Catalog
 
     @classmethod
