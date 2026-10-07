@@ -10,6 +10,7 @@ No FourPC você escolhe as peças de um catálogo e o programa vai avisando quan
 
 - Mostra um catálogo com 41 peças (processadores, placas-mãe, memórias, placas de vídeo, fontes, SSDs/HDs e gabinetes)
 - Dá pra escolher e trocar as peças em qualquer ordem
+- As opções de cada categoria aparecem do mais barato pro mais caro
 - Na lista de peças, as que não combinam com o que você já escolheu aparecem marcadas com `[!]`
 - Se você escolher uma peça incompatível mesmo assim, aparece um alerta explicando o problema
 - Mostra um resumo da montagem com o total em R$ e o consumo de energia
@@ -75,10 +76,10 @@ PLACA-MÃE - escolha uma opção
 ------------------------------------------------------------------------
    1) Gigabyte B550M Aorus Elite           AM4 · DDR4          R$ 799,90
       [!] Incompatível: Soquete CPU x Placa-Mãe
-   2) ASRock B650M Pro RS                  AM5 · DDR5        R$ 1.099,90
-   3) MSI MAG B650 Tomahawk WiFi           AM5 · DDR5        R$ 1.699,90
-   4) MSI PRO B760M-A DDR4                 LGA1700 · DDR4      R$ 899,90
+   2) MSI PRO B760M-A DDR4                 LGA1700 · DDR4      R$ 899,90
       [!] Incompatível: Soquete CPU x Placa-Mãe
+   3) ASRock B650M Pro RS                  AM5 · DDR5        R$ 1.099,90
+   4) MSI MAG B650 Tomahawk WiFi           AM5 · DDR5        R$ 1.699,90
    ...
    0) Voltar
 ```

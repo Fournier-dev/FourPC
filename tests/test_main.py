@@ -140,6 +140,29 @@ class FourPCAppTest(unittest.TestCase):
         self.assertIn("[!] Incompatível: Soquete CPU x Placa-Mãe",
                       session.output)
 
+    def test_options_are_listed_from_cheapest(self) -> None:
+        catalog = Catalog({
+            Category.CPU: [
+                make_cpu(price="2000.00", component_id="cpu-cara"),
+                make_cpu(price="900.00", component_id="cpu-barata"),
+            ],
+        })
+        session = ScriptedSession(["1", "1", "0", "s"])
+        app = FourPCApp(
+            catalog, self.reports_dir, session.input, session.print
+        )
+
+        app.run()
+
+        self.assertLess(
+            session.output.index("R$ 900,00"),
+            session.output.index("R$ 2.000,00"),
+        )
+        # a opção 1 tem que ser a mais barata
+        self.assertEqual(
+            app.build.get(Category.CPU), catalog.get("cpu-barata")
+        )
+
     def test_invalid_option_asks_again(self) -> None:
         session = self.run_app(["abc", "42", "0", "s"])
 

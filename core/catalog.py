@@ -148,8 +148,12 @@ class Catalog:
             ]
         return cls(components)
 
+    # do mais barato pro mais caro; o sorted é estável, então peças com
+    # o mesmo preço ficam na ordem do catálogo
     def options(self, category: Category) -> list[Component]:
-        return list(self._by_category[category])
+        return sorted(
+            self._by_category[category], key=lambda option: option.price
+        )
 
     def get(self, component_id: str) -> Component:
         return self._by_id[component_id]

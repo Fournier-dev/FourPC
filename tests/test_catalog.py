@@ -105,6 +105,23 @@ class CatalogQueryTest(unittest.TestCase):
         self.assertEqual(catalog.options(Category.CPU), [cpu])
         self.assertEqual(catalog.options(Category.GPU), [])
 
+    def test_options_are_sorted_by_price(self) -> None:
+        expensive = make_cpu(price="2500.00", component_id="cpu-cara")
+        cheap = make_cpu(price="700.00", component_id="cpu-barata")
+        middle = make_cpu(price="1200.00", component_id="cpu-media")
+        catalog = Catalog({Category.CPU: [expensive, cheap, middle]})
+
+        self.assertEqual(
+            catalog.options(Category.CPU), [cheap, middle, expensive]
+        )
+
+    def test_options_with_same_price_keep_catalog_order(self) -> None:
+        first = make_cpu(component_id="cpu-1")
+        second = make_cpu(component_id="cpu-2")
+        catalog = Catalog({Category.CPU: [first, second]})
+
+        self.assertEqual(catalog.options(Category.CPU), [first, second])
+
     def test_get_unknown_id_raises_key_error(self) -> None:
         with self.assertRaises(KeyError):
             Catalog({}).get("nao-existe")
@@ -121,6 +138,13 @@ class DefaultCatalogTest(unittest.TestCase):
     def test_every_category_has_options(self) -> None:
         for category in Category:
             self.assertTrue(self.catalog.options(category), category.value)
+
+    def test_options_come_from_cheapest_to_most_expensive(self) -> None:
+        for category in Category:
+            prices = [
+                option.price for option in self.catalog.options(category)
+            ]
+            self.assertEqual(prices, sorted(prices), category.value)
 
     def test_every_cpu_has_a_compatible_motherboard(self) -> None:
         boards = self.catalog.options(Category.MOTHERBOARD)
