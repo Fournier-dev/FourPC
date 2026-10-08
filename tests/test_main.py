@@ -163,6 +163,28 @@ class FourPCAppTest(unittest.TestCase):
             app.build.get(Category.CPU), catalog.get("cpu-barata")
         )
 
+    def test_options_show_price_diff_from_current(self) -> None:
+        catalog = Catalog({
+            Category.CPU: [
+                make_cpu(price="900.00", component_id="cpu-barata"),
+                make_cpu(price="1200.00", component_id="cpu-media"),
+                make_cpu(price="750.00", component_id="cpu-mais-barata"),
+            ],
+        })
+        # escolhe a do meio (R$ 900,00) e depois abre a lista de novo
+        session = ScriptedSession(["1", "2", "1", "0", "0", "s"])
+        app = FourPCApp(
+            catalog, self.reports_dir, session.input, session.print
+        )
+
+        app.run()
+
+        self.assertIn("Diferença: +R$ 300,00", session.output)
+        self.assertIn("Diferença: -R$ 150,00", session.output)
+        # sem peça escolhida ainda não tem diferença pra mostrar
+        first_list = session.output.split("Peça selecionada")[0]
+        self.assertNotIn("Diferença", first_list)
+
     def test_invalid_option_asks_again(self) -> None:
         session = self.run_app(["abc", "42", "0", "s"])
 

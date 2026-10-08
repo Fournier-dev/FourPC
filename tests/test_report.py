@@ -8,7 +8,7 @@ from pathlib import Path
 from core.models import Build
 from core.report import (
     BuildNotReadyError, ExportFormat, export_report, fit, format_brl,
-    render_report, render_summary, to_dict,
+    format_price_diff, render_report, render_summary, to_dict,
 )
 from tests.helpers import make_complete_build, make_cpu, make_motherboard
 
@@ -21,6 +21,19 @@ class FormatBrlTest(unittest.TestCase):
         self.assertEqual(format_brl(Decimal("699.9")), "R$ 699,90")
         self.assertEqual(format_brl(Decimal("1299.90")), "R$ 1.299,90")
         self.assertEqual(format_brl(Decimal("1234567.89")), "R$ 1.234.567,89")
+
+
+class FormatPriceDiffTest(unittest.TestCase):
+    def test_positive_diff_has_plus_sign(self) -> None:
+        self.assertEqual(format_price_diff(Decimal("300")), "+R$ 300,00")
+
+    def test_negative_diff_has_minus_sign(self) -> None:
+        self.assertEqual(
+            format_price_diff(Decimal("-1150.5")), "-R$ 1.150,50"
+        )
+
+    def test_zero_diff(self) -> None:
+        self.assertEqual(format_price_diff(Decimal("0")), "mesmo preço")
 
 
 class FitTest(unittest.TestCase):

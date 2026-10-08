@@ -47,6 +47,15 @@ def format_brl(value: Decimal) -> str:
     return "R$ " + br_format.replace("_", ".")
 
 
+# diferença de preço com sinal na frente
+# Ex.: 300 -> "+R$ 300,00", -150 -> "-R$ 150,00"
+def format_price_diff(diff: Decimal) -> str:
+    if diff == 0:
+        return "mesmo preço"
+    sign = "+" if diff > 0 else "-"
+    return sign + format_brl(abs(diff))
+
+
 # corta o texto se ele não couber na coluna
 def fit(text: str, width: int) -> str:
     if len(text) <= width:

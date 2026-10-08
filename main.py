@@ -11,7 +11,8 @@ from core.catalog import Catalog, CatalogError
 from core.models import Build, Category, Component
 from core.report import (
     REPORT_WIDTH, THICK_LINE, THIN_LINE, ExportFormat, export_report, fit,
-    format_brl, format_result, render_summary, status_message,
+    format_brl, format_price_diff, format_result, render_summary,
+    status_message,
 )
 from core.validators import find_issues
 
@@ -144,6 +145,10 @@ class FourPCApp:
             self._print(
                 f"{marker} {number:>2}) {name:<36} {specs:<15} {price:>13}"
             )
+            # mostra quanto muda no total se trocar pela peça atual
+            if current is not None and option != current:
+                diff = format_price_diff(option.price - current.price)
+                self._print(f"      Diferença: {diff}")
             # avisa antes de escolher se a peça vai dar problema
             for rule in self._conflicts_with(option):
                 self._print(f"      [!] Incompatível: {rule}")

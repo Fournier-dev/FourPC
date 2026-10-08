@@ -11,6 +11,7 @@ No FourPC você escolhe as peças de um catálogo e o programa vai avisando quan
 - Mostra um catálogo com 41 peças (processadores, placas-mãe, memórias, placas de vídeo, fontes, SSDs/HDs e gabinetes)
 - Dá pra escolher e trocar as peças em qualquer ordem
 - As opções de cada categoria aparecem do mais barato pro mais caro
+- Quando a categoria já tem uma peça escolhida, cada opção mostra a diferença de preço em relação a ela (ex.: `+R$ 300,00` ou `-R$ 150,00`)
 - Na lista de peças, as que não combinam com o que você já escolheu aparecem marcadas com `[!]`
 - Se você escolher uma peça incompatível mesmo assim, aparece um alerta explicando o problema
 - Mostra um resumo da montagem com o total em R$ e o consumo de energia
