@@ -152,6 +152,11 @@ class Build:
         changes: dict[str, Any] = {component.category.value: component}
         return replace(self, **changes)
 
+    # mesma ideia do with_component: devolve uma Build nova sem a peça
+    def without(self, category: Category) -> "Build":
+        changes: dict[str, Any] = {category.value: None}
+        return replace(self, **changes)
+
     def get(self, category: Category) -> Component | None:
         component: Component | None = getattr(self, category.value)
         return component

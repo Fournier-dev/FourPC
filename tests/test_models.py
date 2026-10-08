@@ -55,6 +55,24 @@ class BuildTest(unittest.TestCase):
 
         self.assertIs(build.cpu, second)
 
+    def test_without_removes_only_that_category(self) -> None:
+        cpu = make_cpu()
+        board = make_motherboard()
+        build = Build().with_component(cpu).with_component(board)
+
+        new_build = build.without(Category.CPU)
+
+        self.assertIsNone(new_build.cpu)
+        self.assertIs(new_build.motherboard, board)
+        # a montagem original não muda
+        self.assertIs(build.cpu, cpu)
+        self.assertEqual(new_build.total_price, board.price)
+
+    def test_without_on_empty_category_keeps_build(self) -> None:
+        build = Build().with_component(make_cpu())
+
+        self.assertEqual(build.without(Category.GPU), build)
+
     def test_missing_categories_follow_category_order(self) -> None:
         build = Build().with_component(make_motherboard())
 

@@ -152,10 +152,23 @@ class FourPCApp:
             # avisa antes de escolher se a peça vai dar problema
             for rule in self._conflicts_with(option):
                 self._print(f"      [!] Incompatível: {rule}")
+        # a opção de remover só aparece se já tiver peça escolhida e fica
+        # logo depois da última peça da lista
+        remove_option = len(options) + 1
+        max_option = len(options)
+        if current is not None:
+            self._print(f"  {remove_option:>2}) Remover peça atual")
+            max_option = remove_option
         self._print("   0) Voltar")
 
-        choice = self._ask_option("Escolha a peça: ", len(options))
+        choice = self._ask_option("Escolha a peça: ", max_option)
         if choice == 0:
+            return
+        if current is not None and choice == remove_option:
+            self.build = self.build.without(category)
+            self._print(
+                f"\nPeça removida de {category.label}: {current.name}"
+            )
             return
         selected = options[choice - 1]
         self.build = self.build.with_component(selected)

@@ -185,6 +185,27 @@ class FourPCAppTest(unittest.TestCase):
         first_list = session.output.split("Peça selecionada")[0]
         self.assertNotIn("Diferença", first_list)
 
+    def test_remove_current_component(self) -> None:
+        catalog = small_catalog()
+        # escolhe a CPU 1 e depois abre de novo e usa a opção 3 (remover)
+        session = ScriptedSession(["1", "1", "1", "3", "0", "s"])
+        app = FourPCApp(
+            catalog, self.reports_dir, session.input, session.print
+        )
+
+        app.run()
+
+        self.assertIn("3) Remover peça atual", session.output)
+        self.assertIn("Peça removida de Processador", session.output)
+        self.assertIsNone(app.build.get(Category.CPU))
+
+    def test_remove_option_hidden_without_component(self) -> None:
+        # sem peça escolhida o 3 é inválido nessa tela
+        session = self.run_app(["1", "3", "0", "0", "s"])
+
+        self.assertNotIn("Remover peça atual", session.output)
+        self.assertIn("Digite um número de 0 a 2.", session.output)
+
     def test_invalid_option_asks_again(self) -> None:
         session = self.run_app(["abc", "42", "0", "s"])
 
