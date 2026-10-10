@@ -10,7 +10,7 @@ from typing import Any
 from core.models import Build, Category, Component
 from core.validators import (
     PSU_SAFETY_MARGIN, RuleResult, Status, check_all, estimated_load_watts,
-    find_issues, required_psu_wattage,
+    find_issues, psu_headroom_percent, required_psu_wattage,
 )
 
 # larguras das colunas do relatório
@@ -126,7 +126,9 @@ def _power_section(build: Build) -> list[str]:
         _key_value(f"Fonte mínima recomendada (+{margin})", f"{required} W")
     )
     if psu is not None:
+        headroom = psu_headroom_percent(cpu, gpu, psu)
         lines.append(_key_value("Fonte selecionada", f"{psu.wattage} W"))
+        lines.append(_key_value("Folga da fonte", f"{headroom}%"))
     else:
         lines.append(_key_value("Fonte selecionada", "-"))
     return lines
@@ -213,6 +215,9 @@ def to_dict(build: Build, generated_at: datetime) -> dict[str, Any]:
         }
         if build.psu is not None:
             power["psu_watts"] = build.psu.wattage
+            power["psu_headroom_percent"] = psu_headroom_percent(
+                build.cpu, build.gpu, build.psu
+            )
 
     compatibility: list[dict[str, str]] = []
     for result in check_all(build):

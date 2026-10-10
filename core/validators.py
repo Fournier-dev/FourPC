@@ -1,9 +1,9 @@
 from collections.abc import Callable
 from dataclasses import dataclass
-from decimal import ROUND_CEILING, Decimal
+from decimal import ROUND_CEILING, ROUND_FLOOR, Decimal
 from enum import Enum
 
-from core.models import CPU, GPU, Build, Category
+from core.models import CPU, GPU, PSU, Build, Category
 
 # margem de segurança da fonte (20%)
 PSU_SAFETY_MARGIN = Decimal("0.20")
@@ -45,6 +45,15 @@ def required_psu_wattage(cpu: CPU, gpu: GPU) -> int:
     load = Decimal(estimated_load_watts(cpu, gpu))
     required = load * (1 + PSU_SAFETY_MARGIN)
     return int(required.to_integral_value(rounding=ROUND_CEILING))
+
+
+# quanto da potência da fonte fica sobrando, em %
+# Ex.: fonte de 650 W com consumo de 424 W -> sobram 226 W -> 34%
+def psu_headroom_percent(cpu: CPU, gpu: GPU, psu: PSU) -> int:
+    spare = Decimal(psu.wattage - estimated_load_watts(cpu, gpu))
+    percent = spare * 100 / Decimal(psu.wattage)
+    # arredondo pra baixo pra folga nunca parecer maior do que é
+    return int(percent.to_integral_value(rounding=ROUND_FLOOR))
 
 
 # Regra 1: o soquete do processador tem que ser igual ao da placa-mãe

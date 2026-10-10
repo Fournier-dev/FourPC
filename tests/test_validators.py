@@ -3,7 +3,8 @@ import unittest
 from core.models import Build, Category, Component, RamType
 from core.validators import (
     PSU_RULE, RAM_RULE, SOCKET_RULE, Status, check_all, check_cpu_socket,
-    check_psu_wattage, check_ram_type, find_issues, required_psu_wattage,
+    check_psu_wattage, check_ram_type, find_issues, psu_headroom_percent,
+    required_psu_wattage,
 )
 from tests.helpers import (
     make_complete_build, make_cpu, make_gpu, make_motherboard, make_psu,
@@ -16,6 +17,38 @@ def build_with(*components: Component) -> Build:
     for component in components:
         build = build.with_component(component)
     return build
+
+
+class PsuHeadroomTest(unittest.TestCase):
+    def test_headroom_is_the_spare_share_of_the_psu(self) -> None:
+        # 424 W de consumo numa fonte de 650 W: sobram 226 W (34,7%)
+        headroom = psu_headroom_percent(
+            make_cpu(tdp_watts=120), make_gpu(304), make_psu(650)
+        )
+
+        self.assertEqual(headroom, 34)
+
+    def test_exact_division(self) -> None:
+        headroom = psu_headroom_percent(
+            make_cpu(tdp_watts=100), make_gpu(200), make_psu(400)
+        )
+
+        self.assertEqual(headroom, 25)
+
+    def test_no_headroom_when_psu_equals_load(self) -> None:
+        headroom = psu_headroom_percent(
+            make_cpu(tdp_watts=100), make_gpu(200), make_psu(300)
+        )
+
+        self.assertEqual(headroom, 0)
+
+    def test_negative_when_psu_is_smaller_than_load(self) -> None:
+        # faltam 24 W numa fonte de 400 W: -6%
+        headroom = psu_headroom_percent(
+            make_cpu(tdp_watts=120), make_gpu(304), make_psu(400)
+        )
+
+        self.assertEqual(headroom, -6)
 
 
 class CpuSocketRuleTest(unittest.TestCase):

@@ -16,6 +16,7 @@ No FourPC você escolhe as peças de um catálogo e o programa vai avisando quan
 - Na lista de peças, as que não combinam com o que você já escolheu aparecem marcadas com `[!]`
 - Se você escolher uma peça incompatível mesmo assim, aparece um alerta explicando o problema
 - Mostra um resumo da montagem com o total em R$ e o consumo de energia
+- No resumo de energia também aparece a folga da fonte, que é quanto da potência dela fica sobrando (ex.: `Folga da fonte: 34%`)
 - Só deixa finalizar quando todas as peças foram escolhidas e está tudo compatível
 - Salva o orçamento em `.txt` e/ou `.json` na pasta `reports/`
 
@@ -139,6 +140,7 @@ ENERGIA
   Consumo estimado (CPU + GPU)                                     424 W
   Fonte mínima recomendada (+20%)                                  509 W
   Fonte selecionada                                                650 W
+  Folga da fonte                                                     34%
 
 COMPATIBILIDADE
 ------------------------------------------------------------------------

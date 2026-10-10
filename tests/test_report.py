@@ -10,7 +10,9 @@ from core.report import (
     BuildNotReadyError, ExportFormat, export_report, fit, format_brl,
     format_price_diff, render_report, render_summary, to_dict,
 )
-from tests.helpers import make_complete_build, make_cpu, make_motherboard
+from tests.helpers import (
+    make_complete_build, make_cpu, make_gpu, make_motherboard,
+)
 
 GENERATED_AT = datetime(2026, 10, 4, 14, 30, 0)
 
@@ -53,6 +55,17 @@ class RenderTest(unittest.TestCase):
         self.assertIn("216 W", summary)
         self.assertNotIn("[ERRO]", summary)
 
+    def test_summary_shows_psu_headroom(self) -> None:
+        # consumo de 180 W numa fonte de 650 W: sobram 72%
+        summary = render_summary(make_complete_build())
+
+        self.assertRegex(summary, r"Folga da fonte\s+72%")
+
+    def test_summary_without_psu_has_no_headroom(self) -> None:
+        build = Build().with_component(make_cpu()).with_component(make_gpu())
+
+        self.assertNotIn("Folga da fonte", render_summary(build))
+
     def test_summary_of_incomplete_build_shows_pending_items(self) -> None:
         summary = render_summary(Build().with_component(make_cpu()))
 
@@ -87,6 +100,14 @@ class ToDictTest(unittest.TestCase):
         self.assertEqual(data["components"][0]["price"], "1000.00")
         self.assertEqual(data["components"][1]["ram_type"], "DDR5")
         self.assertEqual(data["power"]["required_psu_watts"], 216)
+        self.assertEqual(data["power"]["psu_headroom_percent"], 72)
+
+    def test_power_has_no_headroom_without_psu(self) -> None:
+        build = Build().with_component(make_cpu()).with_component(make_gpu())
+
+        power = to_dict(build, GENERATED_AT)["power"]
+
+        self.assertNotIn("psu_headroom_percent", power)
 
     def test_result_is_json_serializable(self) -> None:
         json.dumps(to_dict(make_complete_build(), GENERATED_AT))
