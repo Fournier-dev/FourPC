@@ -32,6 +32,11 @@ EXIT_OPTION = 0
 SUMMARY_OPTION = 8
 FINALIZE_OPTION = 9
 
+# larguras das colunas na lista de opções de uma categoria
+NAME_WIDTH = 37
+SPECS_WIDTH = 15
+MAX_SPECS_WIDTH = 24
+
 EXPORT_CHOICES: dict[int, list[ExportFormat]] = {
     1: [ExportFormat.TXT],
     2: [ExportFormat.JSON],
@@ -137,13 +142,21 @@ class FourPCApp:
             title += "  (> = peça atual)"
         self._print(title)
         self._print(THIN_LINE)
+        # a coluna de specs cresce se precisar (a placa-mãe tem 3 dados)
+        # e o nome cede o espaço, pra linha continuar com a mesma largura
+        specs_width = max(
+            [SPECS_WIDTH] + [len(option.specs()) for option in options]
+        )
+        specs_width = min(specs_width, MAX_SPECS_WIDTH)
+        name_width = NAME_WIDTH + SPECS_WIDTH - specs_width
         for number, option in enumerate(options, start=1):
             marker = ">" if option == current else " "
-            name = fit(option.name, 36)
-            specs = fit(option.specs(), 15)
+            name = fit(option.name, name_width)
+            specs = fit(option.specs(), specs_width)
             price = format_brl(option.price)
             self._print(
-                f"{marker} {number:>2}) {name:<36} {specs:<15} {price:>13}"
+                f"{marker} {number:>2}) {name:<{name_width}} "
+                f"{specs:<{specs_width}} {price:>12}"
             )
             # mostra quanto muda no total se trocar pela peça atual
             if current is not None and option != current:

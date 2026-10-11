@@ -11,12 +11,12 @@
     {"id": "cpu-ultra7-265k", "name": "Intel Core Ultra 7 265K", "socket": "LGA1851", "tdp_watts": 125, "price": 2499.90}
   ],
   "motherboard": [
-    {"id": "mb-b550m-aorus", "name": "Gigabyte B550M Aorus Elite", "socket": "AM4", "ram_type": "DDR4", "price": 799.90},
-    {"id": "mb-b650m-pro-rs", "name": "ASRock B650M Pro RS", "socket": "AM5", "ram_type": "DDR5", "price": 1099.90},
-    {"id": "mb-b650-tomahawk", "name": "MSI MAG B650 Tomahawk WiFi", "socket": "AM5", "ram_type": "DDR5", "price": 1699.90},
-    {"id": "mb-b760m-ddr4", "name": "MSI PRO B760M-A DDR4", "socket": "LGA1700", "ram_type": "DDR4", "price": 899.90},
-    {"id": "mb-z790-tuf", "name": "ASUS TUF Gaming Z790-Plus WiFi", "socket": "LGA1700", "ram_type": "DDR5", "price": 1999.90},
-    {"id": "mb-z890-aorus", "name": "Gigabyte Z890 Aorus Elite WiFi7", "socket": "LGA1851", "ram_type": "DDR5", "price": 2299.90}
+    {"id": "mb-b550m-aorus", "name": "Gigabyte B550M Aorus Elite", "socket": "AM4", "ram_type": "DDR4", "form_factor": "mATX", "price": 799.90},
+    {"id": "mb-b650m-pro-rs", "name": "ASRock B650M Pro RS", "socket": "AM5", "ram_type": "DDR5", "form_factor": "mATX", "price": 1099.90},
+    {"id": "mb-b650-tomahawk", "name": "MSI MAG B650 Tomahawk WiFi", "socket": "AM5", "ram_type": "DDR5", "form_factor": "ATX", "price": 1699.90},
+    {"id": "mb-b760m-ddr4", "name": "MSI PRO B760M-A DDR4", "socket": "LGA1700", "ram_type": "DDR4", "form_factor": "mATX", "price": 899.90},
+    {"id": "mb-z790-tuf", "name": "ASUS TUF Gaming Z790-Plus WiFi", "socket": "LGA1700", "ram_type": "DDR5", "form_factor": "ATX", "price": 1999.90},
+    {"id": "mb-z890-aorus", "name": "Gigabyte Z890 Aorus Elite WiFi7", "socket": "LGA1851", "ram_type": "DDR5", "form_factor": "ATX", "price": 2299.90}
   ],
   "ram": [
     {"id": "ram-ddr4-16", "name": "Kingston Fury Beast 2x8GB 3200MHz", "ram_type": "DDR4", "capacity_gb": 16, "price": 299.90},
@@ -48,10 +48,10 @@
     {"id": "hd-barracuda-2tb", "name": "Seagate BarraCuda 2TB 7200RPM", "kind": "HD", "capacity_gb": 2000, "price": 399.90}
   ],
   "case": [
-    {"id": "case-air903", "name": "Montech Air 903 Max", "price": 399.90},
-    {"id": "case-lancool216", "name": "Lian Li Lancool 216", "price": 599.90},
-    {"id": "case-h5-flow", "name": "NZXT H5 Flow", "price": 649.90},
-    {"id": "case-4000d", "name": "Corsair 4000D Airflow", "price": 699.90},
-    {"id": "case-o11-evo", "name": "Lian Li O11 Dynamic EVO", "price": 1199.90}
+    {"id": "case-air903", "name": "Montech Air 903 Max", "supported_form_factors": ["ATX", "mATX", "ITX"], "price": 399.90},
+    {"id": "case-lancool216", "name": "Lian Li Lancool 216", "supported_form_factors": ["ATX", "mATX", "ITX"], "price": 599.90},
+    {"id": "case-h5-flow", "name": "NZXT H5 Flow", "supported_form_factors": ["ATX", "mATX", "ITX"], "price": 649.90},
+    {"id": "case-4000d", "name": "Corsair 4000D Airflow", "supported_form_factors": ["ATX", "mATX", "ITX"], "price": 699.90},
+    {"id": "case-o11-evo", "name": "Lian Li O11 Dynamic EVO", "supported_form_factors": ["ATX", "mATX", "ITX"], "price": 1199.90}
   ]
 }

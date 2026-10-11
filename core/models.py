@@ -36,6 +36,13 @@ class RamType(str, Enum):
     DDR5 = "DDR5"
 
 
+# tamanho da placa-mãe, do maior pro menor
+class FormFactor(str, Enum):
+    ATX = "ATX"
+    MATX = "mATX"
+    ITX = "ITX"
+
+
 # classe base com o que toda peça tem
 @dataclass(frozen=True)
 class Component:
@@ -73,9 +80,13 @@ class Motherboard(Component):
 
     socket: str
     ram_type: RamType
+    form_factor: FormFactor
 
     def specs(self) -> str:
-        return f"{self.socket} · {self.ram_type.value}"
+        return (
+            f"{self.socket} · {self.ram_type.value} · "
+            f"{self.form_factor.value}"
+        )
 
 
 @dataclass(frozen=True)
@@ -123,6 +134,22 @@ class Storage(Component):
 @dataclass(frozen=True)
 class Case(Component):
     category: ClassVar[Category] = Category.CASE
+
+    # usei tupla porque a peça é imutável (frozen=True)
+    supported_form_factors: tuple[FormFactor, ...]
+
+    def __post_init__(self) -> None:
+        super().__post_init__()
+        if len(self.supported_form_factors) == 0:
+            raise ValueError(
+                f"O gabinete '{self.id}' não suporta nenhum formato de "
+                "placa-mãe."
+            )
+
+    def specs(self) -> str:
+        return ", ".join(
+            form_factor.value for form_factor in self.supported_form_factors
+        )
 
 
 # 480 -> "480 GB", 1000 -> "1 TB", 1500 -> "1,5 TB"

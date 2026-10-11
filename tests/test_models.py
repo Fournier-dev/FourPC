@@ -2,9 +2,9 @@ import unittest
 from dataclasses import fields
 from decimal import Decimal
 
-from core.models import Build, Category, format_capacity
+from core.models import Build, Category, FormFactor, format_capacity
 from tests.helpers import (
-    make_complete_build, make_cpu, make_gpu, make_motherboard,
+    make_case, make_complete_build, make_cpu, make_gpu, make_motherboard,
 )
 
 
@@ -27,6 +27,22 @@ class ComponentTest(unittest.TestCase):
     def test_specs_summarize_technical_attributes(self) -> None:
         self.assertEqual(make_cpu("AM5", 120).specs(), "AM5 · 120 W")
         self.assertEqual(make_gpu(250).specs(), "250 W")
+
+    def test_motherboard_specs_include_form_factor(self) -> None:
+        board = make_motherboard(form_factor=FormFactor.MATX)
+
+        self.assertEqual(board.specs(), "AM5 · DDR5 · mATX")
+
+    def test_case_specs_list_supported_form_factors(self) -> None:
+        case = make_case(
+            supported_form_factors=(FormFactor.MATX, FormFactor.ITX)
+        )
+
+        self.assertEqual(case.specs(), "mATX, ITX")
+
+    def test_case_without_form_factors_is_rejected(self) -> None:
+        with self.assertRaises(ValueError):
+            make_case(supported_form_factors=())
 
 
 class FormatCapacityTest(unittest.TestCase):

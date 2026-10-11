@@ -77,12 +77,12 @@ Depois de escolher um processador AM5, as placas-mãe de outro soquete aparecem 
 ------------------------------------------------------------------------
 PLACA-MÃE - escolha uma opção
 ------------------------------------------------------------------------
-   1) Gigabyte B550M Aorus Elite           AM4 · DDR4          R$ 799,90
+   1) Gigabyte B550M Aorus Elite      AM4 · DDR4 · mATX        R$ 799,90
       [!] Incompatível: Soquete CPU x Placa-Mãe
-   2) MSI PRO B760M-A DDR4                 LGA1700 · DDR4      R$ 899,90
+   2) MSI PRO B760M-A DDR4            LGA1700 · DDR4 · mATX    R$ 899,90
       [!] Incompatível: Soquete CPU x Placa-Mãe
-   3) ASRock B650M Pro RS                  AM5 · DDR5        R$ 1.099,90
-   4) MSI MAG B650 Tomahawk WiFi           AM5 · DDR5        R$ 1.699,90
+   3) ASRock B650M Pro RS             AM5 · DDR5 · mATX      R$ 1.099,90
+   4) MSI MAG B650 Tomahawk WiFi      AM5 · DDR5 · ATX       R$ 1.699,90
    ...
    0) Voltar
 ```
@@ -122,7 +122,7 @@ COMPONENTES
 Processador     AMD Ryzen 7 7800X3D                          R$ 2.599,90
                 AM5 · 120 W
 Placa-Mãe       ASRock B650M Pro RS                          R$ 1.099,90
-                AM5 · DDR5
+                AM5 · DDR5 · mATX
 Memória RAM     Corsair Vengeance 2x16GB 6000MHz               R$ 799,90
                 DDR5 · 32 GB
 Placa de Vídeo  AMD Radeon RX 9070 XT 16GB                   R$ 4.999,90
@@ -132,6 +132,7 @@ Fonte           MSI MAG A650BN 80+ Bronze                      R$ 379,90
 Armazenamento   WD Black SN770 1TB                             R$ 499,90
                 SSD NVMe · 1 TB
 Gabinete        Lian Li Lancool 216                            R$ 599,90
+                ATX, mATX, ITX
 ------------------------------------------------------------------------
 TOTAL                                                       R$ 10.979,30
 
@@ -175,7 +176,7 @@ FourPC/
 └── tests/               # testes
 ```
 
-Pra adicionar uma peça nova é só colocar ela no `data/catalog.json`, seguindo o formato das outras da mesma categoria.
+Pra adicionar uma peça nova é só colocar ela no `data/catalog.json`, seguindo o formato das outras da mesma categoria. As placas-mãe têm o campo `form_factor` (`ATX`, `mATX` ou `ITX`) e os gabinetes têm a lista `supported_form_factors` com os formatos de placa que cabem neles.
 
 ## O que eu aprendi
 

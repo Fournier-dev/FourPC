@@ -190,6 +190,9 @@ def _json_value(value: Any) -> Any:
         return value.value
     if isinstance(value, Decimal):
         return str(value)
+    # os formatos suportados pelo gabinete vêm como tupla
+    if isinstance(value, (list, tuple)):
+        return [_json_value(item) for item in value]
     return value
 
 

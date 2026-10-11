@@ -6,7 +6,9 @@ from pathlib import Path
 from typing import Any
 
 from core.catalog import Catalog, CatalogError
-from core.models import CPU, RAM, Category, Motherboard, RamType
+from core.models import (
+    CPU, RAM, Case, Category, FormFactor, Motherboard, RamType,
+)
 from tests.helpers import make_cpu
 
 
@@ -15,7 +17,8 @@ def minimal_catalog_data() -> dict[str, Any]:
         "cpu": [{"id": "c1", "name": "CPU", "socket": "AM5",
                  "tdp_watts": 65, "price": 1000.00}],
         "motherboard": [{"id": "m1", "name": "Placa", "socket": "AM5",
-                         "ram_type": "DDR5", "price": 800.00}],
+                         "ram_type": "DDR5", "form_factor": "mATX",
+                         "price": 800.00}],
         "ram": [{"id": "r1", "name": "RAM", "ram_type": "DDR5",
                  "capacity_gb": 16, "price": 400.00}],
         "gpu": [{"id": "g1", "name": "GPU", "power_watts": 115,
@@ -24,7 +27,9 @@ def minimal_catalog_data() -> dict[str, Any]:
                  "price": 400.00}],
         "storage": [{"id": "s1", "name": "SSD", "kind": "SSD NVMe",
                      "capacity_gb": 1000, "price": 500.00}],
-        "case": [{"id": "k1", "name": "Gabinete", "price": 300.00}],
+        "case": [{"id": "k1", "name": "Gabinete",
+                  "supported_form_factors": ["ATX", "mATX"],
+                  "price": 300.00}],
     }
 
 
@@ -50,6 +55,42 @@ class LoadCatalogTest(CatalogFileTestCase):
         self.assertIsInstance(board, Motherboard)
         assert isinstance(board, Motherboard)
         self.assertIs(board.ram_type, RamType.DDR5)
+
+    def test_loads_form_factors(self) -> None:
+        catalog = Catalog.from_json(self.write_catalog(minimal_catalog_data()))
+
+        board = catalog.get("m1")
+        case = catalog.get("k1")
+
+        assert isinstance(board, Motherboard)
+        assert isinstance(case, Case)
+        self.assertIs(board.form_factor, FormFactor.MATX)
+        self.assertEqual(
+            case.supported_form_factors, (FormFactor.ATX, FormFactor.MATX)
+        )
+
+    def test_unknown_form_factor_raises_catalog_error(self) -> None:
+        data = minimal_catalog_data()
+        data["motherboard"][0]["form_factor"] = "E-ATX"
+
+        with self.assertRaisesRegex(CatalogError, "m1"):
+            Catalog.from_json(self.write_catalog(data))
+
+    def test_motherboard_without_form_factor_is_reported(self) -> None:
+        data = minimal_catalog_data()
+        del data["motherboard"][0]["form_factor"]
+
+        with self.assertRaisesRegex(CatalogError, "form_factor"):
+            Catalog.from_json(self.write_catalog(data))
+
+    def test_case_form_factors_must_be_a_non_empty_list(self) -> None:
+        invalid_values: list[Any] = ["ATX", []]
+        for invalid in invalid_values:
+            data = minimal_catalog_data()
+            data["case"][0]["supported_form_factors"] = invalid
+
+            with self.assertRaisesRegex(CatalogError, "k1"):
+                Catalog.from_json(self.write_catalog(data))
 
     def test_prices_are_parsed_as_exact_decimals(self) -> None:
         data = minimal_catalog_data()
@@ -164,6 +205,15 @@ class DefaultCatalogTest(unittest.TestCase):
         for board in self.catalog.options(Category.MOTHERBOARD):
             assert isinstance(board, Motherboard)
             self.assertIn(board.ram_type, ram_types, board.name)
+
+    def test_every_motherboard_fits_in_some_case(self) -> None:
+        supported: set[FormFactor] = set()
+        for case in self.catalog.options(Category.CASE):
+            assert isinstance(case, Case)
+            supported.update(case.supported_form_factors)
+        for board in self.catalog.options(Category.MOTHERBOARD):
+            assert isinstance(board, Motherboard)
+            self.assertIn(board.form_factor, supported, board.name)
 
 
 if __name__ == "__main__":

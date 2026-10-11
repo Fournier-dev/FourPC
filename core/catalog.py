@@ -5,8 +5,8 @@ from pathlib import Path
 from typing import Any
 
 from core.models import (
-    CPU, GPU, PSU, RAM, Case, Category, Component, Motherboard, RamType,
-    Storage,
+    CPU, GPU, PSU, RAM, Case, Category, Component, FormFactor, Motherboard,
+    RamType, Storage,
 )
 
 DEFAULT_CATALOG_PATH = (
@@ -40,6 +40,7 @@ def _parse_motherboard(data: Mapping[str, Any]) -> Motherboard:
         **_base_fields(data),
         socket=str(data["socket"]),
         ram_type=RamType(data["ram_type"]),
+        form_factor=FormFactor(data["form_factor"]),
     )
 
 
@@ -68,7 +69,13 @@ def _parse_storage(data: Mapping[str, Any]) -> Storage:
 
 
 def _parse_case(data: Mapping[str, Any]) -> Case:
-    return Case(**_base_fields(data))
+    supported = data["supported_form_factors"]
+    if not isinstance(supported, list):
+        raise ValueError("supported_form_factors deve ser uma lista.")
+    return Case(
+        **_base_fields(data),
+        supported_form_factors=tuple(FormFactor(item) for item in supported),
+    )
 
 
 # qual função usar pra ler cada categoria do JSON

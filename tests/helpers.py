@@ -4,7 +4,8 @@
 from decimal import Decimal
 
 from core.models import (
-    CPU, GPU, PSU, RAM, Build, Case, Motherboard, RamType, Storage,
+    CPU, GPU, PSU, RAM, Build, Case, FormFactor, Motherboard, RamType,
+    Storage,
 )
 
 
@@ -18,9 +19,11 @@ def make_cpu(
 def make_motherboard(
     socket: str = "AM5", ram_type: RamType = RamType.DDR5,
     price: str = "800.00", component_id: str = "mb-test",
+    form_factor: FormFactor = FormFactor.ATX,
 ) -> Motherboard:
     return Motherboard(
-        component_id, "Placa-Mãe Teste", Decimal(price), socket, ram_type
+        component_id, "Placa-Mãe Teste", Decimal(price), socket, ram_type,
+        form_factor,
     )
 
 
@@ -55,8 +58,14 @@ def make_storage(
     )
 
 
-def make_case(price: str = "300.00", component_id: str = "case-test") -> Case:
-    return Case(component_id, "Gabinete Teste", Decimal(price))
+def make_case(
+    price: str = "300.00", component_id: str = "case-test",
+    supported_form_factors: tuple[FormFactor, ...] = tuple(FormFactor),
+) -> Case:
+    return Case(
+        component_id, "Gabinete Teste", Decimal(price),
+        supported_form_factors,
+    )
 
 
 # montagem completa e sem erro, total de R$ 5.400,00

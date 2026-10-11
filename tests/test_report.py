@@ -99,6 +99,11 @@ class ToDictTest(unittest.TestCase):
         self.assertEqual(len(data["components"]), 7)
         self.assertEqual(data["components"][0]["price"], "1000.00")
         self.assertEqual(data["components"][1]["ram_type"], "DDR5")
+        self.assertEqual(data["components"][1]["form_factor"], "ATX")
+        self.assertEqual(
+            data["components"][6]["supported_form_factors"],
+            ["ATX", "mATX", "ITX"],
+        )
         self.assertEqual(data["power"]["required_psu_watts"], 216)
         self.assertEqual(data["power"]["psu_headroom_percent"], 72)
 
