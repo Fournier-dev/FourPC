@@ -11,6 +11,7 @@ PSU_SAFETY_MARGIN = Decimal("0.20")
 SOCKET_RULE = "Soquete CPU x Placa-Mãe"
 RAM_RULE = "Tecnologia de RAM x Placa-Mãe"
 PSU_RULE = "Dimensionamento da Fonte"
+FORM_FACTOR_RULE = "Formato da Placa-Mãe x Gabinete"
 
 
 class Status(Enum):
@@ -128,11 +129,36 @@ def check_psu_wattage(build: Build) -> RuleResult:
     )
 
 
+# Regra 4: o gabinete tem que aceitar o formato da placa-mãe
+def check_form_factor(build: Build) -> RuleResult:
+    involved = (Category.MOTHERBOARD, Category.CASE)
+    board, case = build.motherboard, build.case
+    if board is None or case is None:
+        return RuleResult(
+            FORM_FACTOR_RULE, involved, Status.PENDING,
+            "Selecione a placa-mãe e o gabinete para verificar.",
+        )
+    board_format = board.form_factor.value
+    if board.form_factor in case.supported_form_factors:
+        return RuleResult(
+            FORM_FACTOR_RULE, involved, Status.OK,
+            f"O gabinete aceita placas-mãe {board_format}.",
+        )
+    return RuleResult(
+        FORM_FACTOR_RULE, involved, Status.FAIL,
+        f"A placa-mãe {board.name} é {board_format}, mas o gabinete "
+        f"{case.name} só aceita {case.specs()}.",
+        f"escolha um gabinete que aceite {board_format} ou uma placa-mãe "
+        f"{case.specs()}.",
+    )
+
+
 # pra criar uma regra nova é só escrever a função e colocar nessa lista
 RULES: list[Callable[[Build], RuleResult]] = [
     check_cpu_socket,
     check_ram_type,
     check_psu_wattage,
+    check_form_factor,
 ]
 
 

@@ -1,14 +1,14 @@
 import unittest
 
-from core.models import Build, Category, Component, RamType
+from core.models import Build, Category, Component, FormFactor, RamType
 from core.validators import (
-    PSU_RULE, RAM_RULE, SOCKET_RULE, Status, check_all, check_cpu_socket,
-    check_psu_wattage, check_ram_type, find_issues, psu_headroom_percent,
-    required_psu_wattage,
+    FORM_FACTOR_RULE, PSU_RULE, RAM_RULE, SOCKET_RULE, Status, check_all,
+    check_cpu_socket, check_form_factor, check_psu_wattage, check_ram_type,
+    find_issues, psu_headroom_percent, required_psu_wattage,
 )
 from tests.helpers import (
-    make_complete_build, make_cpu, make_gpu, make_motherboard, make_psu,
-    make_ram,
+    make_case, make_complete_build, make_cpu, make_gpu, make_motherboard,
+    make_psu, make_ram,
 )
 
 
@@ -140,6 +140,53 @@ class PsuWattageRuleTest(unittest.TestCase):
         self.assertIs(check_psu_wattage(build).status, Status.PENDING)
 
 
+class FormFactorRuleTest(unittest.TestCase):
+    def test_supported_form_factor_passes(self) -> None:
+        build = build_with(
+            make_motherboard(form_factor=FormFactor.MATX),
+            make_case(
+                supported_form_factors=(FormFactor.ATX, FormFactor.MATX)
+            ),
+        )
+
+        result = check_form_factor(build)
+
+        self.assertIs(result.status, Status.OK)
+        self.assertIn("mATX", result.message)
+
+    def test_atx_board_in_small_case_fails_with_clear_message(self) -> None:
+        build = build_with(
+            make_motherboard(form_factor=FormFactor.ATX),
+            make_case(
+                supported_form_factors=(FormFactor.MATX, FormFactor.ITX)
+            ),
+        )
+
+        result = check_form_factor(build)
+
+        self.assertIs(result.status, Status.FAIL)
+        self.assertIn("ATX", result.message)
+        self.assertIn("mATX, ITX", result.message)
+        self.assertIn("ATX", result.hint)
+
+    def test_is_pending_until_both_parts_are_selected(self) -> None:
+        self.assertIs(
+            check_form_factor(build_with(make_motherboard())).status,
+            Status.PENDING,
+        )
+        self.assertIs(
+            check_form_factor(build_with(make_case())).status,
+            Status.PENDING,
+        )
+
+    def test_involves_motherboard_and_case(self) -> None:
+        result = check_form_factor(Build())
+
+        self.assertTrue(result.involves(Category.MOTHERBOARD))
+        self.assertTrue(result.involves(Category.CASE))
+        self.assertFalse(result.involves(Category.CPU))
+
+
 class ValidateBuildTest(unittest.TestCase):
     def test_compatible_build_has_no_issues(self) -> None:
         self.assertEqual(find_issues(make_complete_build()), [])
@@ -147,7 +194,9 @@ class ValidateBuildTest(unittest.TestCase):
     def test_check_all_reports_every_rule(self) -> None:
         rules = [result.rule for result in check_all(Build())]
 
-        self.assertEqual(rules, [SOCKET_RULE, RAM_RULE, PSU_RULE])
+        self.assertEqual(
+            rules, [SOCKET_RULE, RAM_RULE, PSU_RULE, FORM_FACTOR_RULE]
+        )
 
     def test_reports_all_issues_at_once(self) -> None:
         build = build_with(
@@ -156,11 +205,14 @@ class ValidateBuildTest(unittest.TestCase):
             make_ram(RamType.DDR4),
             make_gpu(575),
             make_psu(450),
+            make_case(supported_form_factors=(FormFactor.ITX,)),
         )
 
         rules = [issue.rule for issue in find_issues(build)]
 
-        self.assertEqual(rules, [SOCKET_RULE, RAM_RULE, PSU_RULE])
+        self.assertEqual(
+            rules, [SOCKET_RULE, RAM_RULE, PSU_RULE, FORM_FACTOR_RULE]
+        )
 
     def test_issue_knows_which_categories_are_involved(self) -> None:
         build = build_with(make_cpu("AM4"), make_motherboard("AM5"))

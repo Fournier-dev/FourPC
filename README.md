@@ -27,6 +27,7 @@ No FourPC você escolhe as peças de um catálogo e o programa vai avisando quan
 | Soquete | O soquete do processador tem que ser igual ao da placa-mãe (ex.: AM5 com AM5) |
 | Memória RAM | A memória tem que ser do mesmo tipo que a placa-mãe aceita (DDR4 ou DDR5) |
 | Fonte | A potência da fonte tem que ser maior ou igual ao consumo do processador + placa de vídeo, com 20% de margem |
+| Formato | O formato da placa-mãe (ATX, mATX ou ITX) tem que estar na lista de formatos que o gabinete aceita |
 
 Exemplo da regra da fonte: um Ryzen 7 7800X3D (120 W) com uma RX 9070 XT (304 W) consome 424 W. Somando 20% de margem dá 508,8 W, então a fonte precisa ter pelo menos 509 W. Uma fonte de 450 W não passa.
 
@@ -152,6 +153,8 @@ COMPATIBILIDADE
   [ OK ] Dimensionamento da Fonte
          A fonte de 650 W atende ao mínimo de 509 W (consumo de 424 W +
          20% de margem).
+  [ OK ] Formato da Placa-Mãe x Gabinete
+         O gabinete aceita placas-mãe mATX.
 
 ========================================================================
 Status: Montagem completa e compatível. Pronta para compra!
@@ -188,7 +191,6 @@ Pra adicionar uma peça nova é só colocar ela no `data/catalog.json`, seguindo
 
 ## Ideias pra melhorar
 
-- Verificar se a placa-mãe cabe no gabinete (ATX, mATX, ITX)
 - Permitir mais de um SSD/HD na mesma montagem
 - Fazer uma versão com interface gráfica ou web
 
