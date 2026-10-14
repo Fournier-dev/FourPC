@@ -66,6 +66,15 @@ class RenderTest(unittest.TestCase):
 
         self.assertNotIn("Folga da fonte", render_summary(build))
 
+    def test_summary_shows_payment_options(self) -> None:
+        summary = render_summary(make_complete_build())
+
+        self.assertRegex(summary, r"À vista no PIX.*R\$ 4\.860,00")
+        self.assertRegex(summary, r"10x sem juros de\s+R\$ 540,00")
+
+    def test_empty_build_has_no_payment_options(self) -> None:
+        self.assertNotIn("PIX", render_summary(Build()))
+
     def test_summary_of_incomplete_build_shows_pending_items(self) -> None:
         summary = render_summary(Build().with_component(make_cpu()))
 
@@ -107,6 +116,18 @@ class ToDictTest(unittest.TestCase):
         self.assertEqual(data["power"]["required_psu_watts"], 216)
         self.assertEqual(data["power"]["psu_headroom_percent"], 72)
 
+    def test_serializes_payment_options(self) -> None:
+        payment = to_dict(make_complete_build(), GENERATED_AT)["payment"]
+
+        self.assertEqual(payment["pix_discount_percent"], 10)
+        self.assertEqual(payment["pix_price"], "4860.00")
+        self.assertEqual(payment["pix_price_formatted"], "R$ 4.860,00")
+        self.assertEqual(payment["installments"], 10)
+        self.assertEqual(payment["installment_price"], "540.00")
+        self.assertEqual(
+            payment["installment_price_formatted"], "R$ 540,00"
+        )
+
     def test_power_has_no_headroom_without_psu(self) -> None:
         build = Build().with_component(make_cpu()).with_component(make_gpu())
 
@@ -131,7 +152,9 @@ class ExportTest(unittest.TestCase):
         )
 
         self.assertEqual(path.name, "orcamento_20261004_143000.txt")
-        self.assertIn("R$ 5.400,00", path.read_text(encoding="utf-8"))
+        content = path.read_text(encoding="utf-8")
+        self.assertIn("R$ 5.400,00", content)
+        self.assertIn("À vista no PIX", content)
 
     def test_exports_json(self) -> None:
         path = export_report(

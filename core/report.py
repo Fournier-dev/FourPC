@@ -8,6 +8,7 @@ from pathlib import Path
 from typing import Any
 
 from core.models import Build, Category, Component
+from core.pricing import PIX_DISCOUNT, payment_options
 from core.validators import (
     PSU_SAFETY_MARGIN, RuleResult, Status, check_all, estimated_load_watts,
     find_issues, psu_headroom_percent, required_psu_wattage,
@@ -106,6 +107,18 @@ def _components_section(build: Build) -> list[str]:
             lines.append(_row("", component.specs()))
     lines.append(THIN_LINE)
     lines.append(_row("TOTAL", "", format_brl(build.total_price)))
+    # só mostra as formas de pagamento quando tem alguma peça escolhida
+    if build.total_price > 0:
+        payment = payment_options(build.total_price)
+        discount = f"{PIX_DISCOUNT:.0%}"
+        lines.append(
+            _row("À vista no PIX", f"({discount} de desconto)",
+                 format_brl(payment.pix_price))
+        )
+        lines.append(
+            _row("Ou parcelado", f"{payment.installments}x sem juros de",
+                 format_brl(payment.installment_price))
+        )
     return lines
 
 
@@ -208,7 +221,8 @@ def _component_to_dict(component: Component) -> dict[str, Any]:
 
 # os preços vão como texto ("1299.90") pra não perder as casas decimais
 def to_dict(build: Build, generated_at: datetime) -> dict[str, Any]:
-    total = build.total_price.quantize(Decimal("0.01"))
+    payment = payment_options(build.total_price)
+    total = payment.total
 
     power: dict[str, int] | None = None
     if build.cpu is not None and build.gpu is not None:
@@ -238,6 +252,16 @@ def to_dict(build: Build, generated_at: datetime) -> dict[str, Any]:
         "compatibility": compatibility,
         "total_price": str(total),
         "total_price_formatted": format_brl(total),
+        "payment": {
+            "pix_discount_percent": int(PIX_DISCOUNT * 100),
+            "pix_price": str(payment.pix_price),
+            "pix_price_formatted": format_brl(payment.pix_price),
+            "installments": payment.installments,
+            "installment_price": str(payment.installment_price),
+            "installment_price_formatted": format_brl(
+                payment.installment_price
+            ),
+        },
     }
 
 

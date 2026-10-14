@@ -16,6 +16,7 @@ No FourPC você escolhe as peças de um catálogo e o programa vai avisando quan
 - Na lista de peças, as que não combinam com o que você já escolheu aparecem marcadas com `[!]`
 - Se você escolher uma peça incompatível mesmo assim, aparece um alerta explicando o problema
 - Mostra um resumo da montagem com o total em R$ e o consumo de energia
+- Abaixo do total aparece o preço à vista no PIX (com 10% de desconto) e o valor de cada parcela em 10x sem juros, tanto no resumo quanto no TXT e no JSON
 - No resumo de energia também aparece a folga da fonte, que é quanto da potência dela fica sobrando (ex.: `Folga da fonte: 34%`)
 - Só deixa finalizar quando todas as peças foram escolhidas e está tudo compatível
 - Salva o orçamento em `.txt` e/ou `.json` na pasta `reports/`
@@ -136,6 +137,8 @@ Gabinete        Lian Li Lancool 216                            R$ 599,90
                 ATX, mATX, ITX
 ------------------------------------------------------------------------
 TOTAL                                                       R$ 10.979,30
+À vista no PIX  (10% de desconto)                            R$ 9.881,37
+Ou parcelado    10x sem juros de                             R$ 1.097,93
 
 ENERGIA
 ------------------------------------------------------------------------
@@ -173,6 +176,7 @@ FourPC/
 │   ├── models.py        # classes das peças e da montagem
 │   ├── catalog.py       # lê o catálogo de peças do JSON
 │   ├── validators.py    # regras de compatibilidade
+│   ├── pricing.py       # desconto no PIX e parcelamento
 │   └── report.py        # resumo, formatação em R$ e exportação
 ├── data/
 │   └── catalog.json     # catálogo de peças
