@@ -7,8 +7,8 @@ from pathlib import Path
 
 from core.models import Build
 from core.report import (
-    BuildNotReadyError, ExportFormat, export_report, fit, format_brl,
-    format_price_diff, render_report, render_summary, to_dict,
+    BuildNotReadyError, ExportFormat, budget_warning, export_report, fit,
+    format_brl, format_price_diff, render_report, render_summary, to_dict,
 )
 from tests.helpers import (
     make_complete_build, make_cpu, make_gpu, make_motherboard,
@@ -71,6 +71,34 @@ class RenderTest(unittest.TestCase):
 
         self.assertRegex(summary, r"À vista no PIX.*R\$ 4\.860,00")
         self.assertRegex(summary, r"10x sem juros de\s+R\$ 540,00")
+
+    def test_summary_without_budget_has_no_budget_line(self) -> None:
+        self.assertNotIn("Orçamento", render_summary(make_complete_build()))
+
+    def test_summary_warns_when_over_budget(self) -> None:
+        summary = render_summary(make_complete_build(), Decimal("5000"))
+
+        self.assertRegex(summary, r"Orçamento\s+limite definido\s+R\$ 5\.000")
+        self.assertIn(
+            "[!] O total passou do orçamento de R$ 5.000,00 em R$ 400,00.",
+            summary,
+        )
+
+    def test_summary_within_budget_shows_what_is_left(self) -> None:
+        summary = render_summary(make_complete_build(), Decimal("5400"))
+
+        self.assertIn("Dentro do orçamento (sobram R$ 0,00)", summary)
+        self.assertNotIn("passou do orçamento", summary)
+
+    def test_budget_warning(self) -> None:
+        build = make_complete_build()
+
+        self.assertIsNone(budget_warning(build, None))
+        self.assertIsNone(budget_warning(build, Decimal("6000")))
+        self.assertEqual(
+            budget_warning(build, Decimal("5399.99")),
+            "O total passou do orçamento de R$ 5.399,99 em R$ 0,01.",
+        )
 
     def test_empty_build_has_no_payment_options(self) -> None:
         self.assertNotIn("PIX", render_summary(Build()))

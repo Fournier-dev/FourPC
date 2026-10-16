@@ -1,10 +1,14 @@
+import re
 from dataclasses import dataclass
-from decimal import ROUND_HALF_UP, Decimal
+from decimal import ROUND_HALF_UP, Decimal, InvalidOperation
 
 PIX_DISCOUNT = Decimal("0.10")
 MAX_INSTALLMENTS = 10
 
 CENTS = Decimal("0.01")
+
+# "5.000" ou "12.500" sem vírgula: os pontos são de milhar
+THOUSANDS_ONLY = re.compile(r"\d{1,3}(\.\d{3})+")
 
 
 # arredonda pros centavos do jeito que a gente aprende na escola
@@ -32,3 +36,27 @@ def payment_options(total: Decimal) -> PaymentOptions:
         installments=MAX_INSTALLMENTS,
         installment_price=round_cents(total / MAX_INSTALLMENTS),
     )
+
+
+# Lê um valor em reais digitado pela pessoa. Aceita "5000", "5000,50",
+# "5.000", "5.000,00" e "R$ 5.000,00". Dá ValueError se não for um
+# valor maior que zero.
+def parse_brl(text: str) -> Decimal:
+    cleaned = text.strip().removeprefix("R$").strip()
+    if "," in cleaned:
+        cleaned = cleaned.replace(".", "").replace(",", ".")
+    elif THOUSANDS_ONLY.fullmatch(cleaned):
+        cleaned = cleaned.replace(".", "")
+    try:
+        value = Decimal(cleaned)
+    except InvalidOperation:
+        raise ValueError(f"valor inválido: {text!r}") from None
+    # is_finite barra "NaN" e "Infinity", que o Decimal aceita
+    if not value.is_finite() or value <= 0:
+        raise ValueError(f"o valor precisa ser maior que zero: {text!r}")
+    return round_cents(value)
+
+
+# quanto o total passou do orçamento (zero se ficou dentro)
+def budget_excess(total: Decimal, budget: Decimal) -> Decimal:
+    return max(total - budget, Decimal("0"))

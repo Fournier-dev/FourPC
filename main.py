@@ -5,14 +5,16 @@ import io
 import sys
 from collections.abc import Callable
 from datetime import datetime
+from decimal import Decimal
 from pathlib import Path
 
 from core.catalog import Catalog, CatalogError
 from core.models import Build, Category, Component
+from core.pricing import parse_brl
 from core.report import (
-    REPORT_WIDTH, THICK_LINE, THIN_LINE, ExportFormat, export_report, fit,
-    format_brl, format_price_diff, format_result, render_summary,
-    status_message,
+    REPORT_WIDTH, THICK_LINE, THIN_LINE, ExportFormat, budget_warning,
+    export_report, fit, format_brl, format_price_diff, format_result,
+    render_summary, status_message,
 )
 from core.validators import find_issues
 
@@ -31,6 +33,7 @@ CATEGORIES = list(Category)
 EXIT_OPTION = 0
 SUMMARY_OPTION = 8
 FINALIZE_OPTION = 9
+BUDGET_OPTION = 10
 
 # larguras das colunas na lista de opções de uma categoria
 NAME_WIDTH = 37
@@ -60,6 +63,8 @@ class FourPCApp:
         self.catalog = catalog
         self.reports_dir = reports_dir
         self.build = Build()
+        # orçamento máximo em R$, None = sem limite
+        self.budget: Decimal | None = None
         self._input = input_func
         self._print = output_func
 
@@ -67,7 +72,7 @@ class FourPCApp:
         self._show_banner()
         while True:
             self._show_main_menu()
-            choice = self._ask_option("Escolha uma opção: ", FINALIZE_OPTION)
+            choice = self._ask_option("Escolha uma opção: ", BUDGET_OPTION)
             if choice == EXIT_OPTION:
                 if self._confirm(
                     "Deseja mesmo sair? A montagem atual será descartada. "
@@ -80,6 +85,8 @@ class FourPCApp:
             elif choice == FINALIZE_OPTION:
                 if self._finalize():
                     return
+            elif choice == BUDGET_OPTION:
+                self._set_budget()
             else:
                 self._choose_component(CATEGORIES[choice - 1])
 
@@ -117,6 +124,12 @@ class FourPCApp:
         self._print(THIN_LINE)
         total = format_brl(self.build.total_price)
         self._print(f"{'Total parcial':>20}{total:>52}")
+        if self.budget is not None:
+            budget = format_brl(self.budget)
+            self._print(f"{'Orçamento máximo':>20}{budget:>52}")
+            warning = budget_warning(self.build, self.budget)
+            if warning is not None:
+                self._print(f"  [!] {warning}")
 
         issues = find_issues(self.build)
         if issues:
@@ -129,6 +142,7 @@ class FourPCApp:
             f"  {SUMMARY_OPTION}) Ver resumo detalhado e compatibilidade"
         )
         self._print(f"  {FINALIZE_OPTION}) Finalizar e exportar orçamento")
+        self._print(f" {BUDGET_OPTION}) Definir orçamento máximo")
         self._print(f"  {EXIT_OPTION}) Sair")
 
     def _choose_component(self, category: Category) -> None:
@@ -208,7 +222,7 @@ class FourPCApp:
         self._print(THICK_LINE)
         self._print("RESUMO DA MONTAGEM".center(REPORT_WIDTH).rstrip())
         self._print(THICK_LINE)
-        self._print(render_summary(self.build))
+        self._print(render_summary(self.build, self.budget))
         self._print("")
         self._print(f"Status: {status_message(self.build)}")
         self._input("\nPressione Enter para voltar ao menu...")
@@ -237,7 +251,7 @@ class FourPCApp:
         self._print(THICK_LINE)
         self._print("ORÇAMENTO FINAL".center(REPORT_WIDTH).rstrip())
         self._print(THICK_LINE)
-        self._print(render_summary(self.build))
+        self._print(render_summary(self.build, self.budget))
         self._print("")
         self._print("Em qual formato deseja exportar o orçamento?")
         self._print("  1) TXT")
@@ -266,6 +280,38 @@ class FourPCApp:
             self._print(f"Orçamento exportado em: {path}")
         self._print("\nObrigado por usar o FourPC!")
         return True
+
+    # Enter vazio tira o limite. Passar do orçamento só gera aviso,
+    # não impede de finalizar
+    def _set_budget(self) -> None:
+        self._print("")
+        if self.budget is not None:
+            self._print(f"Orçamento máximo atual: {format_brl(self.budget)}")
+        while True:
+            answer = self._input(
+                "Digite o orçamento máximo em R$ (Enter para não ter "
+                "limite): "
+            ).strip()
+            if not answer:
+                if self.budget is not None:
+                    self._print("\nOrçamento máximo removido.")
+                self.budget = None
+                return
+            try:
+                self.budget = parse_brl(answer)
+            except ValueError:
+                self._print(
+                    "Valor inválido. Digite um valor maior que zero, "
+                    "ex.: 5000 ou 5.000,00."
+                )
+                continue
+            self._print(
+                f"\nOrçamento máximo definido: {format_brl(self.budget)}"
+            )
+            warning = budget_warning(self.build, self.budget)
+            if warning is not None:
+                self._print(f"[!] {warning}")
+            return
 
     # regras que dariam erro se essa peça fosse escolhida agora
     def _conflicts_with(self, option: Component) -> list[str]:

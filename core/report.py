@@ -8,7 +8,7 @@ from pathlib import Path
 from typing import Any
 
 from core.models import Build, Category, Component
-from core.pricing import PIX_DISCOUNT, payment_options
+from core.pricing import PIX_DISCOUNT, budget_excess, payment_options
 from core.validators import (
     PSU_SAFETY_MARGIN, RuleResult, Status, check_all, estimated_load_watts,
     find_issues, psu_headroom_percent, required_psu_wattage,
@@ -93,7 +93,38 @@ def _key_value(label: str, value: str) -> str:
     return f"  {label:<{REPORT_WIDTH - 2 - PRICE_WIDTH}}{value:>{PRICE_WIDTH}}"
 
 
-def _components_section(build: Build) -> list[str]:
+# aviso que aparece no menu e no resumo quando o total passa do limite
+def budget_warning(build: Build, budget: Decimal | None) -> str | None:
+    if budget is None:
+        return None
+    excess = budget_excess(build.total_price, budget)
+    if excess == 0:
+        return None
+    return (
+        f"O total passou do orçamento de {format_brl(budget)} "
+        f"em {format_brl(excess)}."
+    )
+
+
+def _budget_lines(build: Build, budget: Decimal | None) -> list[str]:
+    if budget is None:
+        return []
+    lines = [_row("Orçamento", "limite definido", format_brl(budget))]
+    warning = budget_warning(build, budget)
+    if warning is None:
+        left = format_brl(budget - build.total_price)
+        lines.append(_row("", f"Dentro do orçamento (sobram {left})"))
+    else:
+        lines += textwrap.wrap(
+            f"[!] {warning}", REPORT_WIDTH,
+            initial_indent="  ", subsequent_indent="      ",
+        )
+    return lines
+
+
+def _components_section(
+    build: Build, budget: Decimal | None = None
+) -> list[str]:
     lines = ["COMPONENTES", THIN_LINE]
     for category in Category:
         component = build.get(category)
@@ -119,6 +150,7 @@ def _components_section(build: Build) -> list[str]:
             _row("Ou parcelado", f"{payment.installments}x sem juros de",
                  format_brl(payment.installment_price))
         )
+    lines += _budget_lines(build, budget)
     return lines
 
 
@@ -168,8 +200,9 @@ def status_message(build: Build) -> str:
     return "Montagem completa e compatível. Pronta para compra!"
 
 
-def render_summary(build: Build) -> str:
-    components = "\n".join(_components_section(build))
+# o orçamento máximo é opcional, só entra no resumo se a pessoa definiu
+def render_summary(build: Build, budget: Decimal | None = None) -> str:
+    components = "\n".join(_components_section(build, budget))
     power = "\n".join(_power_section(build))
     compatibility = "\n".join(_compatibility_section(build))
     return f"{components}\n\n{power}\n\n{compatibility}"

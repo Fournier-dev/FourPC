@@ -17,6 +17,7 @@ No FourPC você escolhe as peças de um catálogo e o programa vai avisando quan
 - Se você escolher uma peça incompatível mesmo assim, aparece um alerta explicando o problema
 - Mostra um resumo da montagem com o total em R$ e o consumo de energia
 - Abaixo do total aparece o preço à vista no PIX (com 10% de desconto) e o valor de cada parcela em 10x sem juros, tanto no resumo quanto no TXT e no JSON
+- Dá pra definir um orçamento máximo em R$ (opção `10` do menu). Se o total passar do limite, aparece um aviso no menu e no resumo dizendo quanto passou (ex.: `[!] O total passou do orçamento de R$ 5.000,00 em R$ 400,00.`). É só um aviso, não impede de finalizar
 - No resumo de energia também aparece a folga da fonte, que é quanto da potência dela fica sobrando (ex.: `Folga da fonte: 34%`)
 - Só deixa finalizar quando todas as peças foram escolhidas e está tudo compatível
 - Salva o orçamento em `.txt` e/ou `.json` na pasta `reports/`
@@ -61,6 +62,7 @@ No Windows, se o comando `python` não funcionar, tente `py main.py`.
 - `1` a `7`: escolhe a peça de cada categoria
 - `8`: mostra o resumo com os preços e a compatibilidade
 - `9`: finaliza e salva o orçamento
+- `10`: define o orçamento máximo (aceita `5000`, `5.000,00` etc.; deixando vazio tira o limite)
 - `0`: sai do programa
 
 ### Testes
@@ -176,7 +178,7 @@ FourPC/
 │   ├── models.py        # classes das peças e da montagem
 │   ├── catalog.py       # lê o catálogo de peças do JSON
 │   ├── validators.py    # regras de compatibilidade
-│   ├── pricing.py       # desconto no PIX e parcelamento
+│   ├── pricing.py       # PIX, parcelamento e orçamento máximo
 │   └── report.py        # resumo, formatação em R$ e exportação
 ├── data/
 │   └── catalog.json     # catálogo de peças

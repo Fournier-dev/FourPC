@@ -1,7 +1,9 @@
 import unittest
 from decimal import Decimal
 
-from core.pricing import payment_options, round_cents
+from core.pricing import (
+    budget_excess, parse_brl, payment_options, round_cents,
+)
 
 
 class RoundCentsTest(unittest.TestCase):
@@ -36,6 +38,42 @@ class PaymentOptionsTest(unittest.TestCase):
 
         self.assertEqual(payment.pix_price, Decimal("0.00"))
         self.assertEqual(payment.installment_price, Decimal("0.00"))
+
+
+class ParseBrlTest(unittest.TestCase):
+    def test_accepts_common_formats(self) -> None:
+        cases = {
+            "5000": Decimal("5000.00"),
+            "5000,5": Decimal("5000.50"),
+            "5.000": Decimal("5000.00"),
+            "5.000,00": Decimal("5000.00"),
+            "R$ 12.500,90": Decimal("12500.90"),
+            "  1500.75 ": Decimal("1500.75"),
+        }
+        for text, expected in cases.items():
+            with self.subTest(text=text):
+                self.assertEqual(parse_brl(text), expected)
+
+    def test_rejects_invalid_values(self) -> None:
+        for text in ("", "abc", "0", "-100", "NaN", "Infinity", "1,2,3"):
+            with self.subTest(text=text):
+                with self.assertRaises(ValueError):
+                    parse_brl(text)
+
+
+class BudgetExcessTest(unittest.TestCase):
+    def test_returns_amount_over_budget(self) -> None:
+        excess = budget_excess(Decimal("5400.00"), Decimal("5000.00"))
+
+        self.assertEqual(excess, Decimal("400.00"))
+
+    def test_zero_when_within_budget(self) -> None:
+        self.assertEqual(
+            budget_excess(Decimal("4000"), Decimal("5000")), Decimal("0")
+        )
+        self.assertEqual(
+            budget_excess(Decimal("5000"), Decimal("5000")), Decimal("0")
+        )
 
 
 if __name__ == "__main__":

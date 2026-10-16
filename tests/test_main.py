@@ -210,9 +210,62 @@ class FourPCAppTest(unittest.TestCase):
         session = self.run_app(["abc", "42", "0", "s"])
 
         self.assertEqual(
-            session.output.count("Opção inválida. Digite um número de 0 a 9."),
+            session.output.count(
+                "Opção inválida. Digite um número de 0 a 10."
+            ),
             2,
         )
+
+    def test_budget_warning_when_total_exceeds_limit(self) -> None:
+        # define R$ 5.000 e escolhe tudo (total de R$ 5.400)
+        inputs = ["10", "5.000,00"] + select_all_first_options() + [
+            "8", "",   # abre o resumo e volta
+            "0", "s",
+        ]
+
+        session = self.run_app(inputs)
+
+        self.assertIn("Orçamento máximo definido: R$ 5.000,00",
+                      session.output)
+        self.assertIn(
+            "[!] O total passou do orçamento de R$ 5.000,00 em R$ 400,00.",
+            session.output,
+        )
+        summary = session.output.split("RESUMO DA MONTAGEM")[1]
+        self.assertIn("passou do orçamento", summary)
+
+    def test_budget_within_limit_has_no_warning(self) -> None:
+        inputs = ["10", "6000"] + select_all_first_options() + [
+            "8", "", "0", "s",
+        ]
+
+        session = self.run_app(inputs)
+
+        self.assertNotIn("passou do orçamento", session.output)
+        self.assertIn("Dentro do orçamento (sobram R$ 600,00)",
+                      session.output)
+
+    def test_budget_does_not_block_finalize(self) -> None:
+        inputs = ["10", "100"] + select_all_first_options() + ["9", "2"]
+
+        session = self.run_app(inputs)
+
+        self.assertIn("Obrigado por usar o FourPC!", session.output)
+        self.assertEqual(len(list(self.reports_dir.iterdir())), 1)
+
+    def test_invalid_budget_asks_again_and_empty_removes(self) -> None:
+        inputs = ["10", "abc", "-50", "3000", "10", "", "0", "s"]
+        session = ScriptedSession(inputs)
+        app = FourPCApp(
+            small_catalog(), self.reports_dir, session.input, session.print
+        )
+
+        app.run()
+
+        self.assertEqual(session.output.count("Valor inválido."), 2)
+        self.assertIn("Orçamento máximo atual: R$ 3.000,00", session.output)
+        self.assertIn("Orçamento máximo removido.", session.output)
+        self.assertIsNone(app.budget)
 
     def test_exit_requires_confirmation(self) -> None:
         session = self.run_app(["0", "n", "0", "s"])
