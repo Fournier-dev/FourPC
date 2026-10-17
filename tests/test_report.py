@@ -8,10 +8,11 @@ from pathlib import Path
 from core.models import Build
 from core.report import (
     BuildNotReadyError, ExportFormat, budget_warning, export_report, fit,
-    format_brl, format_price_diff, render_report, render_summary, to_dict,
+    format_brl, format_price_diff, render_report, render_summary,
+    status_message, to_dict,
 )
 from tests.helpers import (
-    make_complete_build, make_cpu, make_gpu, make_motherboard,
+    make_complete_build, make_cpu, make_gpu, make_motherboard, make_ram,
 )
 
 GENERATED_AT = datetime(2026, 10, 4, 14, 30, 0)
@@ -118,6 +119,23 @@ class RenderTest(unittest.TestCase):
 
         self.assertIn("[ERRO] Soquete CPU x Placa-Mãe", render_summary(build))
 
+    def test_summary_shows_warning_tag(self) -> None:
+        build = make_complete_build().with_component(make_ram(capacity_gb=8))
+
+        summary = render_summary(build)
+
+        self.assertIn("[AVISO] Quantidade de Memória RAM", summary)
+        self.assertIn("Sugestão: prefira uma memória", summary)
+        self.assertNotIn("[ERRO]", summary)
+
+    def test_status_message_mentions_warnings(self) -> None:
+        build = make_complete_build().with_component(make_ram(capacity_gb=8))
+
+        message = status_message(build)
+
+        self.assertIn("com 1 aviso(s)", message)
+        self.assertIn("Pronta para compra", message)
+
     def test_report_has_header_and_date(self) -> None:
         report = render_report(make_complete_build(), GENERATED_AT)
 
@@ -198,6 +216,17 @@ class ExportTest(unittest.TestCase):
         with self.assertRaises(BuildNotReadyError):
             export_report(Build(), self.directory, ExportFormat.TXT)
         self.assertFalse(self.directory.exists())
+
+    def test_warning_does_not_block_export(self) -> None:
+        build = make_complete_build().with_component(make_ram(capacity_gb=8))
+
+        path = export_report(
+            build, self.directory, ExportFormat.JSON, GENERATED_AT
+        )
+
+        data = json.loads(path.read_text(encoding="utf-8"))
+        statuses = [rule["status"] for rule in data["compatibility"]]
+        self.assertIn("warning", statuses)
 
     def test_refuses_incompatible_build(self) -> None:
         build = make_complete_build().with_component(make_cpu("LGA1700"))

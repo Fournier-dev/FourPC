@@ -19,6 +19,7 @@
     {"id": "mb-z890-aorus", "name": "Gigabyte Z890 Aorus Elite WiFi7", "socket": "LGA1851", "ram_type": "DDR5", "form_factor": "ATX", "price": 2299.90}
   ],
   "ram": [
+    {"id": "ram-ddr4-8", "name": "Kingston Fury Beast 1x8GB 3200MHz", "ram_type": "DDR4", "capacity_gb": 8, "price": 149.90},
     {"id": "ram-ddr4-16", "name": "Kingston Fury Beast 2x8GB 3200MHz", "ram_type": "DDR4", "capacity_gb": 16, "price": 299.90},
     {"id": "ram-ddr4-32", "name": "Corsair Vengeance LPX 2x16GB 3600MHz", "ram_type": "DDR4", "capacity_gb": 32, "price": 549.90},
     {"id": "ram-ddr5-16", "name": "Kingston Fury Beast 2x8GB 5600MHz", "ram_type": "DDR5", "capacity_gb": 16, "price": 449.90},

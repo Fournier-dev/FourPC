@@ -185,6 +185,28 @@ class FourPCAppTest(unittest.TestCase):
         first_list = session.output.split("Peça selecionada")[0]
         self.assertNotIn("Diferença", first_list)
 
+    def test_low_ram_shows_warning_but_allows_finalize(self) -> None:
+        # mesmo catálogo pequeno, mas a única RAM tem só 8 GB
+        base = small_catalog()
+        components = {cat: base.options(cat) for cat in Category}
+        components[Category.RAM] = [
+            make_ram(capacity_gb=8, component_id="ram-8gb")
+        ]
+        session = ScriptedSession(select_all_first_options() + ["9", "2"])
+        app = FourPCApp(
+            Catalog(components), self.reports_dir, session.input,
+            session.print,
+        )
+
+        app.run()
+
+        self.assertIn("AVISO\n  [AVISO] Quantidade de Memória RAM",
+                      session.output)
+        self.assertIn("[i] 1 aviso(s) na montagem.", session.output)
+        self.assertNotIn("ALERTA DE COMPATIBILIDADE", session.output)
+        self.assertIn("Obrigado por usar o FourPC!", session.output)
+        self.assertEqual(len(list(self.reports_dir.iterdir())), 1)
+
     def test_remove_current_component(self) -> None:
         catalog = small_catalog()
         # escolhe a CPU 1 e depois abre de novo e usa a opção 3 (remover)

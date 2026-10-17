@@ -8,13 +8,14 @@ No FourPC você escolhe as peças de um catálogo e o programa vai avisando quan
 
 ## O que ele faz
 
-- Mostra um catálogo com 41 peças (processadores, placas-mãe, memórias, placas de vídeo, fontes, SSDs/HDs e gabinetes)
+- Mostra um catálogo com 42 peças (processadores, placas-mãe, memórias, placas de vídeo, fontes, SSDs/HDs e gabinetes)
 - Dá pra escolher e trocar as peças em qualquer ordem
 - Também dá pra remover a peça de uma categoria: quando já tem uma escolhida, a lista ganha a opção "Remover peça atual"
 - As opções de cada categoria aparecem do mais barato pro mais caro
 - Quando a categoria já tem uma peça escolhida, cada opção mostra a diferença de preço em relação a ela (ex.: `+R$ 300,00` ou `-R$ 150,00`)
 - Na lista de peças, as que não combinam com o que você já escolheu aparecem marcadas com `[!]`
 - Se você escolher uma peça incompatível mesmo assim, aparece um alerta explicando o problema
+- Algumas coisas não são erro, só um aviso: elas aparecem como `[AVISO]` no resumo, mas não impedem de finalizar (ex.: memória com menos de 16 GB)
 - Mostra um resumo da montagem com o total em R$ e o consumo de energia
 - Abaixo do total aparece o preço à vista no PIX (com 10% de desconto) e o valor de cada parcela em 10x sem juros, tanto no resumo quanto no TXT e no JSON
 - Dá pra definir um orçamento máximo em R$ (opção `10` do menu). Se o total passar do limite, aparece um aviso no menu e no resumo dizendo quanto passou (ex.: `[!] O total passou do orçamento de R$ 5.000,00 em R$ 400,00.`). É só um aviso, não impede de finalizar
@@ -30,6 +31,12 @@ No FourPC você escolhe as peças de um catálogo e o programa vai avisando quan
 | Memória RAM | A memória tem que ser do mesmo tipo que a placa-mãe aceita (DDR4 ou DDR5) |
 | Fonte | A potência da fonte tem que ser maior ou igual ao consumo do processador + placa de vídeo, com 20% de margem |
 | Formato | O formato da placa-mãe (ATX, mATX ou ITX) tem que estar na lista de formatos que o gabinete aceita |
+
+Também tem os avisos, que não bloqueiam a montagem, só chamam atenção pra algo que pode ser melhorado:
+
+| Aviso | Como funciona |
+|-------|---------------|
+| Quantidade de RAM | Com menos de 16 GB de memória o PC funciona, mas pode ficar lento em jogos e com muitos programas abertos |
 
 Exemplo da regra da fonte: um Ryzen 7 7800X3D (120 W) com uma RX 9070 XT (304 W) consome 424 W. Somando 20% de margem dá 508,8 W, então a fonte precisa ter pelo menos 509 W. Uma fonte de 450 W não passa.
 
@@ -160,6 +167,8 @@ COMPATIBILIDADE
          20% de margem).
   [ OK ] Formato da Placa-Mãe x Gabinete
          O gabinete aceita placas-mãe mATX.
+  [ OK ] Quantidade de Memória RAM
+         32 GB de memória é suficiente para o uso comum e jogos.
 
 ========================================================================
 Status: Montagem completa e compatível. Pronta para compra!

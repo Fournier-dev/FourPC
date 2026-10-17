@@ -8,15 +8,21 @@ from core.models import CPU, GPU, PSU, Build, Category
 # margem de segurança da fonte (20%)
 PSU_SAFETY_MARGIN = Decimal("0.20")
 
+# abaixo disso o PC funciona, mas fica apertado pra jogos e várias abas
+MIN_RECOMMENDED_RAM_GB = 16
+
 SOCKET_RULE = "Soquete CPU x Placa-Mãe"
 RAM_RULE = "Tecnologia de RAM x Placa-Mãe"
 PSU_RULE = "Dimensionamento da Fonte"
 FORM_FACTOR_RULE = "Formato da Placa-Mãe x Gabinete"
+RAM_CAPACITY_RULE = "Quantidade de Memória RAM"
 
 
 class Status(Enum):
     OK = "ok"
     FAIL = "fail"
+    # aviso não é erro: aparece no resumo mas deixa finalizar
+    WARNING = "warning"
     PENDING = "pending"  # ainda faltam peças pra conseguir verificar
 
 
@@ -31,6 +37,10 @@ class RuleResult:
     @property
     def failed(self) -> bool:
         return self.status is Status.FAIL
+
+    @property
+    def warned(self) -> bool:
+        return self.status is Status.WARNING
 
     def involves(self, category: Category) -> bool:
         return category in self.categories
@@ -153,12 +163,36 @@ def check_form_factor(build: Build) -> RuleResult:
     )
 
 
+# Aviso 1: com menos de 16 GB de RAM o PC fica lento hoje em dia
+def check_ram_capacity(build: Build) -> RuleResult:
+    involved = (Category.RAM,)
+    ram = build.ram
+    if ram is None:
+        return RuleResult(
+            RAM_CAPACITY_RULE, involved, Status.PENDING,
+            "Selecione a memória RAM para verificar.",
+        )
+    if ram.capacity_gb >= MIN_RECOMMENDED_RAM_GB:
+        return RuleResult(
+            RAM_CAPACITY_RULE, involved, Status.OK,
+            f"{ram.capacity_gb} GB de memória é suficiente para o uso "
+            "comum e jogos.",
+        )
+    return RuleResult(
+        RAM_CAPACITY_RULE, involved, Status.WARNING,
+        f"A memória {ram.name} tem só {ram.capacity_gb} GB. Funciona, mas "
+        "pode deixar o PC lento em jogos e com muitos programas abertos.",
+        f"prefira uma memória de pelo menos {MIN_RECOMMENDED_RAM_GB} GB.",
+    )
+
+
 # pra criar uma regra nova é só escrever a função e colocar nessa lista
 RULES: list[Callable[[Build], RuleResult]] = [
     check_cpu_socket,
     check_ram_type,
     check_psu_wattage,
     check_form_factor,
+    check_ram_capacity,
 ]
 
 
@@ -169,3 +203,8 @@ def check_all(build: Build) -> list[RuleResult]:
 # só as regras que deram erro
 def find_issues(build: Build) -> list[RuleResult]:
     return [result for result in check_all(build) if result.failed]
+
+
+# só os avisos (não impedem de finalizar)
+def find_warnings(build: Build) -> list[RuleResult]:
+    return [result for result in check_all(build) if result.warned]

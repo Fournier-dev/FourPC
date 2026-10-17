@@ -2,9 +2,10 @@ import unittest
 
 from core.models import Build, Category, Component, FormFactor, RamType
 from core.validators import (
-    FORM_FACTOR_RULE, PSU_RULE, RAM_RULE, SOCKET_RULE, Status, check_all,
-    check_cpu_socket, check_form_factor, check_psu_wattage, check_ram_type,
-    find_issues, psu_headroom_percent, required_psu_wattage,
+    FORM_FACTOR_RULE, PSU_RULE, RAM_CAPACITY_RULE, RAM_RULE, SOCKET_RULE,
+    Status, check_all, check_cpu_socket, check_form_factor,
+    check_psu_wattage, check_ram_capacity, check_ram_type, find_issues,
+    find_warnings, psu_headroom_percent, required_psu_wattage,
 )
 from tests.helpers import (
     make_case, make_complete_build, make_cpu, make_gpu, make_motherboard,
@@ -187,6 +188,35 @@ class FormFactorRuleTest(unittest.TestCase):
         self.assertFalse(result.involves(Category.CPU))
 
 
+class RamCapacityWarningTest(unittest.TestCase):
+    def test_sixteen_gb_is_ok(self) -> None:
+        result = check_ram_capacity(build_with(make_ram(capacity_gb=16)))
+
+        self.assertIs(result.status, Status.OK)
+
+    def test_less_than_sixteen_gb_is_a_warning(self) -> None:
+        result = check_ram_capacity(build_with(make_ram(capacity_gb=8)))
+
+        self.assertIs(result.status, Status.WARNING)
+        self.assertTrue(result.warned)
+        self.assertFalse(result.failed)
+        self.assertIn("8 GB", result.message)
+        self.assertIn("16 GB", result.hint)
+
+    def test_is_pending_without_ram(self) -> None:
+        self.assertIs(check_ram_capacity(Build()).status, Status.PENDING)
+
+    def test_warning_does_not_count_as_issue(self) -> None:
+        build = make_complete_build().with_component(make_ram(capacity_gb=8))
+
+        self.assertEqual(find_issues(build), [])
+        warnings = [result.rule for result in find_warnings(build)]
+        self.assertEqual(warnings, [RAM_CAPACITY_RULE])
+
+    def test_compatible_build_has_no_warnings(self) -> None:
+        self.assertEqual(find_warnings(make_complete_build()), [])
+
+
 class ValidateBuildTest(unittest.TestCase):
     def test_compatible_build_has_no_issues(self) -> None:
         self.assertEqual(find_issues(make_complete_build()), [])
@@ -195,7 +225,9 @@ class ValidateBuildTest(unittest.TestCase):
         rules = [result.rule for result in check_all(Build())]
 
         self.assertEqual(
-            rules, [SOCKET_RULE, RAM_RULE, PSU_RULE, FORM_FACTOR_RULE]
+            rules,
+            [SOCKET_RULE, RAM_RULE, PSU_RULE, FORM_FACTOR_RULE,
+             RAM_CAPACITY_RULE],
         )
 
     def test_reports_all_issues_at_once(self) -> None:

@@ -11,7 +11,7 @@ from core.models import Build, Category, Component
 from core.pricing import PIX_DISCOUNT, budget_excess, payment_options
 from core.validators import (
     PSU_SAFETY_MARGIN, RuleResult, Status, check_all, estimated_load_watts,
-    find_issues, psu_headroom_percent, required_psu_wattage,
+    find_issues, find_warnings, psu_headroom_percent, required_psu_wattage,
 )
 
 # larguras das colunas do relatório
@@ -26,6 +26,7 @@ THIN_LINE = "-" * REPORT_WIDTH
 STATUS_TAGS: dict[Status, str] = {
     Status.OK: "[ OK ]",
     Status.FAIL: "[ERRO]",
+    Status.WARNING: "[AVISO]",
     Status.PENDING: "[ -- ]",
 }
 
@@ -197,6 +198,12 @@ def status_message(build: Build) -> str:
     if missing:
         names = ", ".join(category.label for category in missing)
         return f"Montagem incompleta. Faltam: {names}."
+    warnings = find_warnings(build)
+    if warnings:
+        return (
+            f"Montagem completa e compatível, com {len(warnings)} aviso(s) "
+            "no resumo. Pronta para compra!"
+        )
     return "Montagem completa e compatível. Pronta para compra!"
 
 

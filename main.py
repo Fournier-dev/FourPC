@@ -16,7 +16,7 @@ from core.report import (
     export_report, fit, format_brl, format_price_diff, format_result,
     render_summary, status_message,
 )
-from core.validators import find_issues
+from core.validators import find_issues, find_warnings
 
 REPORTS_DIR = Path(__file__).resolve().parent / "reports"
 
@@ -137,6 +137,12 @@ class FourPCApp:
                 f"  [!] {len(issues)} incompatibilidade(s) encontrada(s). "
                 f"Veja os detalhes na opção {SUMMARY_OPTION}."
             )
+        warnings = find_warnings(self.build)
+        if warnings:
+            self._print(
+                f"  [i] {len(warnings)} aviso(s) na montagem. "
+                f"Veja os detalhes na opção {SUMMARY_OPTION}."
+            )
         self._print("")
         self._print(
             f"  {SUMMARY_OPTION}) Ver resumo detalhado e compatibilidade"
@@ -210,12 +216,17 @@ class FourPCApp:
         for issue in find_issues(self.build):
             if issue.involves(category):
                 issues.append(issue)
-        if not issues:
-            return
-        self._print("\nALERTA DE COMPATIBILIDADE")
-        for issue in issues:
-            for line in format_result(issue):
-                self._print(line)
+        if issues:
+            self._print("\nALERTA DE COMPATIBILIDADE")
+            for issue in issues:
+                for line in format_result(issue):
+                    self._print(line)
+        # o aviso só informa, a peça continua escolhida normalmente
+        for warning in find_warnings(self.build):
+            if warning.involves(category):
+                self._print("\nAVISO")
+                for line in format_result(warning):
+                    self._print(line)
 
     def _show_summary(self) -> None:
         self._print("")
