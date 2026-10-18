@@ -3,13 +3,14 @@ import unittest
 from core.models import Build, Category, Component, FormFactor, RamType
 from core.validators import (
     FORM_FACTOR_RULE, PSU_RULE, RAM_CAPACITY_RULE, RAM_RULE, SOCKET_RULE,
-    Status, check_all, check_cpu_socket, check_form_factor,
-    check_psu_wattage, check_ram_capacity, check_ram_type, find_issues,
-    find_warnings, psu_headroom_percent, required_psu_wattage,
+    STORAGE_KIND_RULE, Status, check_all, check_cpu_socket,
+    check_form_factor, check_psu_wattage, check_ram_capacity,
+    check_ram_type, check_storage_kind, find_issues, find_warnings,
+    psu_headroom_percent, required_psu_wattage,
 )
 from tests.helpers import (
     make_case, make_complete_build, make_cpu, make_gpu, make_motherboard,
-    make_psu, make_ram,
+    make_psu, make_ram, make_storage,
 )
 
 
@@ -217,6 +218,38 @@ class RamCapacityWarningTest(unittest.TestCase):
         self.assertEqual(find_warnings(make_complete_build()), [])
 
 
+class StorageKindWarningTest(unittest.TestCase):
+    def test_ssd_is_ok(self) -> None:
+        for kind in ("SSD NVMe", "SSD SATA"):
+            with self.subTest(kind=kind):
+                result = check_storage_kind(build_with(make_storage(
+                    kind=kind
+                )))
+
+                self.assertIs(result.status, Status.OK)
+
+    def test_hd_is_a_warning(self) -> None:
+        result = check_storage_kind(build_with(make_storage(kind="HD")))
+
+        self.assertIs(result.status, Status.WARNING)
+        self.assertFalse(result.failed)
+        self.assertIn("HD", result.message)
+        self.assertIn("SSD", result.hint)
+        self.assertTrue(result.involves(Category.STORAGE))
+
+    def test_is_pending_without_storage(self) -> None:
+        self.assertIs(check_storage_kind(Build()).status, Status.PENDING)
+
+    def test_hd_warning_does_not_block_build(self) -> None:
+        build = make_complete_build().with_component(
+            make_storage(kind="HD")
+        )
+
+        self.assertEqual(find_issues(build), [])
+        warnings = [result.rule for result in find_warnings(build)]
+        self.assertEqual(warnings, [STORAGE_KIND_RULE])
+
+
 class ValidateBuildTest(unittest.TestCase):
     def test_compatible_build_has_no_issues(self) -> None:
         self.assertEqual(find_issues(make_complete_build()), [])
@@ -227,7 +260,7 @@ class ValidateBuildTest(unittest.TestCase):
         self.assertEqual(
             rules,
             [SOCKET_RULE, RAM_RULE, PSU_RULE, FORM_FACTOR_RULE,
-             RAM_CAPACITY_RULE],
+             RAM_CAPACITY_RULE, STORAGE_KIND_RULE],
         )
 
     def test_reports_all_issues_at_once(self) -> None:

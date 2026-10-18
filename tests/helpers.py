@@ -51,10 +51,10 @@ def make_psu(
 
 def make_storage(
     capacity_gb: int = 1000, price: str = "500.00",
-    component_id: str = "ssd-test",
+    component_id: str = "ssd-test", kind: str = "SSD NVMe",
 ) -> Storage:
     return Storage(
-        component_id, "SSD Teste", Decimal(price), "SSD NVMe", capacity_gb
+        component_id, "SSD Teste", Decimal(price), kind, capacity_gb
     )
 
 

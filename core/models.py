@@ -127,6 +127,11 @@ class Storage(Component):
     kind: str
     capacity_gb: int
 
+    # no catálogo o tipo vem como "HD", "SSD SATA" ou "SSD NVMe"
+    @property
+    def is_hdd(self) -> bool:
+        return self.kind.strip().upper().startswith("HD")
+
     def specs(self) -> str:
         return f"{self.kind} · {format_capacity(self.capacity_gb)}"
 

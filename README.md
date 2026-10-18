@@ -15,7 +15,7 @@ No FourPC você escolhe as peças de um catálogo e o programa vai avisando quan
 - Quando a categoria já tem uma peça escolhida, cada opção mostra a diferença de preço em relação a ela (ex.: `+R$ 300,00` ou `-R$ 150,00`)
 - Na lista de peças, as que não combinam com o que você já escolheu aparecem marcadas com `[!]`
 - Se você escolher uma peça incompatível mesmo assim, aparece um alerta explicando o problema
-- Algumas coisas não são erro, só um aviso: elas aparecem como `[AVISO]` no resumo, mas não impedem de finalizar (ex.: memória com menos de 16 GB)
+- Algumas coisas não são erro, só um aviso: elas aparecem como `[AVISO]` no resumo, mas não impedem de finalizar (ex.: memória com menos de 16 GB ou HD como disco principal)
 - Mostra um resumo da montagem com o total em R$ e o consumo de energia
 - Abaixo do total aparece o preço à vista no PIX (com 10% de desconto) e o valor de cada parcela em 10x sem juros, tanto no resumo quanto no TXT e no JSON
 - Dá pra definir um orçamento máximo em R$ (opção `10` do menu). Se o total passar do limite, aparece um aviso no menu e no resumo dizendo quanto passou (ex.: `[!] O total passou do orçamento de R$ 5.000,00 em R$ 400,00.`). É só um aviso, não impede de finalizar
@@ -37,6 +37,7 @@ Também tem os avisos, que não bloqueiam a montagem, só chamam atenção pra a
 | Aviso | Como funciona |
 |-------|---------------|
 | Quantidade de RAM | Com menos de 16 GB de memória o PC funciona, mas pode ficar lento em jogos e com muitos programas abertos |
+| Tipo de armazenamento | Se o disco principal for um HD (e não um SSD), o sistema fica mais lento pra ligar e abrir programas. O HD é melhor pra guardar arquivos |
 
 Exemplo da regra da fonte: um Ryzen 7 7800X3D (120 W) com uma RX 9070 XT (304 W) consome 424 W. Somando 20% de margem dá 508,8 W, então a fonte precisa ter pelo menos 509 W. Uma fonte de 450 W não passa.
 
@@ -169,6 +170,9 @@ COMPATIBILIDADE
          O gabinete aceita placas-mãe mATX.
   [ OK ] Quantidade de Memória RAM
          32 GB de memória é suficiente para o uso comum e jogos.
+  [ OK ] Tipo de Armazenamento
+         O disco principal é um SSD NVMe, bom para o sistema ficar
+         rápido.
 
 ========================================================================
 Status: Montagem completa e compatível. Pronta para compra!

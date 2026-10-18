@@ -16,6 +16,7 @@ RAM_RULE = "Tecnologia de RAM x Placa-Mãe"
 PSU_RULE = "Dimensionamento da Fonte"
 FORM_FACTOR_RULE = "Formato da Placa-Mãe x Gabinete"
 RAM_CAPACITY_RULE = "Quantidade de Memória RAM"
+STORAGE_KIND_RULE = "Tipo de Armazenamento"
 
 
 class Status(Enum):
@@ -186,6 +187,31 @@ def check_ram_capacity(build: Build) -> RuleResult:
     )
 
 
+# Aviso 2: HD como disco principal deixa o sistema lento pra ligar e abrir
+# programas. Como a montagem só tem um disco, ele é sempre o principal.
+def check_storage_kind(build: Build) -> RuleResult:
+    involved = (Category.STORAGE,)
+    storage = build.storage
+    if storage is None:
+        return RuleResult(
+            STORAGE_KIND_RULE, involved, Status.PENDING,
+            "Selecione o armazenamento para verificar.",
+        )
+    if not storage.is_hdd:
+        return RuleResult(
+            STORAGE_KIND_RULE, involved, Status.OK,
+            f"O disco principal é um {storage.kind}, bom para o sistema "
+            "ficar rápido.",
+        )
+    return RuleResult(
+        STORAGE_KIND_RULE, involved, Status.WARNING,
+        f"O {storage.name} é um HD. Funciona, mas como disco principal "
+        "deixa o sistema mais lento para ligar e abrir programas.",
+        "prefira um SSD como disco principal (o HD é bom para guardar "
+        "arquivos).",
+    )
+
+
 # pra criar uma regra nova é só escrever a função e colocar nessa lista
 RULES: list[Callable[[Build], RuleResult]] = [
     check_cpu_socket,
@@ -193,6 +219,7 @@ RULES: list[Callable[[Build], RuleResult]] = [
     check_psu_wattage,
     check_form_factor,
     check_ram_capacity,
+    check_storage_kind,
 ]
 
 

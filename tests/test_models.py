@@ -5,6 +5,7 @@ from decimal import Decimal
 from core.models import Build, Category, FormFactor, format_capacity
 from tests.helpers import (
     make_case, make_complete_build, make_cpu, make_gpu, make_motherboard,
+    make_storage,
 )
 
 
@@ -43,6 +44,11 @@ class ComponentTest(unittest.TestCase):
     def test_case_without_form_factors_is_rejected(self) -> None:
         with self.assertRaises(ValueError):
             make_case(supported_form_factors=())
+
+    def test_storage_knows_if_it_is_a_hard_drive(self) -> None:
+        self.assertTrue(make_storage(kind="HD").is_hdd)
+        self.assertFalse(make_storage(kind="SSD NVMe").is_hdd)
+        self.assertFalse(make_storage(kind="SSD SATA").is_hdd)
 
 
 class FormatCapacityTest(unittest.TestCase):

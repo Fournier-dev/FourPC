@@ -13,6 +13,7 @@ from core.report import (
 )
 from tests.helpers import (
     make_complete_build, make_cpu, make_gpu, make_motherboard, make_ram,
+    make_storage,
 )
 
 GENERATED_AT = datetime(2026, 10, 4, 14, 30, 0)
@@ -127,6 +128,16 @@ class RenderTest(unittest.TestCase):
         self.assertIn("[AVISO] Quantidade de Memória RAM", summary)
         self.assertIn("Sugestão: prefira uma memória", summary)
         self.assertNotIn("[ERRO]", summary)
+
+    def test_summary_warns_about_hard_drive(self) -> None:
+        build = make_complete_build().with_component(
+            make_storage(kind="HD")
+        )
+
+        summary = render_summary(build)
+
+        self.assertIn("[AVISO] Tipo de Armazenamento", summary)
+        self.assertIn("Sugestão: prefira um SSD", summary)
 
     def test_status_message_mentions_warnings(self) -> None:
         build = make_complete_build().with_component(make_ram(capacity_gb=8))
