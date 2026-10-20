@@ -4,7 +4,7 @@ Simulador de montagem de PC feito em Python, que roda no terminal.
 
 Fiz esse projeto pra praticar Python e lógica de programação. Quem vai montar o primeiro PC costuma ter várias dúvidas: esse processador encaixa nessa placa-mãe? Essa memória é compatível? Essa fonte aguenta a placa de vídeo?
 
-No FourPC você escolhe as peças de um catálogo e o programa vai avisando quando alguma coisa não combina. No final ele mostra o orçamento com o preço total e salva em um arquivo TXT ou JSON.
+No FourPC você escolhe as peças de um catálogo e o programa vai avisando quando alguma coisa não combina. No final ele mostra o orçamento com o preço total e salva em um arquivo TXT, JSON ou CSV.
 
 ## O que ele faz
 
@@ -17,11 +17,11 @@ No FourPC você escolhe as peças de um catálogo e o programa vai avisando quan
 - Se você escolher uma peça incompatível mesmo assim, aparece um alerta explicando o problema
 - Algumas coisas não são erro, só um aviso: elas aparecem como `[AVISO]` no resumo, mas não impedem de finalizar (ex.: memória com menos de 16 GB ou HD como disco principal)
 - Mostra um resumo da montagem com o total em R$ e o consumo de energia
-- Abaixo do total aparece o preço à vista no PIX (com 10% de desconto) e o valor de cada parcela em 10x sem juros, tanto no resumo quanto no TXT e no JSON
+- Abaixo do total aparece o preço à vista no PIX (com 10% de desconto) e o valor de cada parcela em 10x sem juros, tanto no resumo quanto no TXT, no JSON e no CSV
 - Dá pra definir um orçamento máximo em R$ (opção `10` do menu). Se o total passar do limite, aparece um aviso no menu e no resumo dizendo quanto passou (ex.: `[!] O total passou do orçamento de R$ 5.000,00 em R$ 400,00.`). É só um aviso, não impede de finalizar
 - No resumo de energia também aparece a folga da fonte, que é quanto da potência dela fica sobrando (ex.: `Folga da fonte: 34%`)
 - Só deixa finalizar quando todas as peças foram escolhidas e está tudo compatível
-- Salva o orçamento em `.txt` e/ou `.json` na pasta `reports/`
+- Salva o orçamento em `.txt`, `.json` e/ou `.csv` na pasta `reports/` (no final dá pra escolher um formato só ou todos de uma vez)
 
 ## Regras de compatibilidade
 
@@ -181,6 +181,19 @@ Preços e consumos são estimativas para fins de simulação.
 ```
 
 O `.json` tem as mesmas informações, só que organizadas pra ser lidas por outro programa.
+
+Já o `.csv` é pra abrir numa planilha (Excel, LibreOffice ou Google Planilhas). Ele tem uma linha por peça e, no final, o total, o preço no PIX e o valor da parcela. Usei `;` como separador e vírgula nos centavos porque é assim que o Excel em português espera:
+
+```text
+Categoria;Peça;Especificações;Preço (R$)
+Processador;AMD Ryzen 7 7800X3D;AM5 · 120 W;2599,90
+Placa-Mãe;ASRock B650M Pro RS;AM5 · DDR5 · mATX;1099,90
+...
+Gabinete;Lian Li Lancool 216;ATX, mATX, ITX;599,90
+Total;;;10979,30
+À vista no PIX;;10% de desconto;9881,37
+Parcelado;;10x sem juros de;1097,93
+```
 
 ## Estrutura do projeto
 

@@ -93,16 +93,22 @@ class FourPCAppTest(unittest.TestCase):
         app.run()
         return session
 
-    def test_full_session_exports_both_formats(self) -> None:
-        session = self.run_app(select_all_first_options() + ["9", "3"])
+    def test_full_session_exports_all_formats(self) -> None:
+        session = self.run_app(select_all_first_options() + ["9", "4"])
 
         exported = sorted(path.suffix for path in self.reports_dir.iterdir())
-        self.assertEqual(exported, [".json", ".txt"])
+        self.assertEqual(exported, [".csv", ".json", ".txt"])
         self.assertIn("Obrigado por usar o FourPC!", session.output)
 
         json_file = next(self.reports_dir.glob("*.json"))
         data = json.loads(json_file.read_text(encoding="utf-8"))
         self.assertEqual(data["total_price"], "5400.00")
+
+    def test_exports_only_csv(self) -> None:
+        self.run_app(select_all_first_options() + ["9", "3"])
+
+        exported = [path.suffix for path in self.reports_dir.iterdir()]
+        self.assertEqual(exported, [".csv"])
 
     def test_incompatible_choice_shows_alert_and_blocks_export(self) -> None:
         inputs = [

@@ -1,3 +1,4 @@
+import csv
 import json
 import tempfile
 import unittest
@@ -8,8 +9,8 @@ from pathlib import Path
 from core.models import Build
 from core.report import (
     BuildNotReadyError, ExportFormat, budget_warning, export_report, fit,
-    format_brl, format_price_diff, render_report, render_summary,
-    status_message, to_dict,
+    format_brl, format_csv_number, format_price_diff, render_csv,
+    render_report, render_summary, status_message, to_dict,
 )
 from tests.helpers import (
     make_complete_build, make_cpu, make_gpu, make_motherboard, make_ram,
@@ -196,6 +197,40 @@ class ToDictTest(unittest.TestCase):
         json.dumps(to_dict(make_complete_build(), GENERATED_AT))
 
 
+class CsvTest(unittest.TestCase):
+    def test_formats_number_with_comma(self) -> None:
+        self.assertEqual(format_csv_number(Decimal("1299.9")), "1299,90")
+        self.assertEqual(format_csv_number(Decimal("0")), "0,00")
+
+    def test_has_header_components_and_totals(self) -> None:
+        build = make_complete_build()
+        rows = list(csv.reader(
+            render_csv(build).splitlines(), delimiter=";"
+        ))
+
+        self.assertEqual(
+            rows[0], ["Categoria", "Peça", "Especificações", "Preço (R$)"]
+        )
+        # cabeçalho + 7 peças + total, PIX e parcelado
+        self.assertEqual(len(rows), 1 + len(build.selected()) + 3)
+        self.assertEqual(rows[-3], ["Total", "", "", "5400,00"])
+        self.assertEqual(rows[-2][0], "À vista no PIX")
+        self.assertEqual(rows[-2][3], "4860,00")
+        self.assertEqual(rows[-1][2], "10x sem juros de")
+        self.assertEqual(rows[-1][3], "540,00")
+
+    def test_component_row(self) -> None:
+        build = make_complete_build()
+        cpu = build.selected()[0]
+        rows = list(csv.reader(
+            render_csv(build).splitlines(), delimiter=";"
+        ))
+
+        self.assertEqual(rows[1][0], cpu.category.label)
+        self.assertEqual(rows[1][1], cpu.name)
+        self.assertEqual(rows[1][3], format_csv_number(cpu.price))
+
+
 class ExportTest(unittest.TestCase):
     def setUp(self) -> None:
         self._tmp = tempfile.TemporaryDirectory()
@@ -222,6 +257,18 @@ class ExportTest(unittest.TestCase):
         data = json.loads(path.read_text(encoding="utf-8"))
         self.assertEqual(path.suffix, ".json")
         self.assertEqual(data["total_price"], "5400.00")
+
+    def test_exports_csv_with_bom(self) -> None:
+        path = export_report(
+            make_complete_build(), self.directory, ExportFormat.CSV,
+            GENERATED_AT,
+        )
+
+        self.assertEqual(path.name, "orcamento_20261004_143000.csv")
+        # o BOM é o que faz o Excel abrir os acentos certinho
+        self.assertTrue(path.read_bytes().startswith(b"\xef\xbb\xbf"))
+        content = path.read_text(encoding="utf-8-sig")
+        self.assertIn("Total;;;5400,00", content)
 
     def test_refuses_incomplete_build(self) -> None:
         with self.assertRaises(BuildNotReadyError):

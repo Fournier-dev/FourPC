@@ -43,7 +43,8 @@ MAX_SPECS_WIDTH = 24
 EXPORT_CHOICES: dict[int, list[ExportFormat]] = {
     1: [ExportFormat.TXT],
     2: [ExportFormat.JSON],
-    3: [ExportFormat.TXT, ExportFormat.JSON],
+    3: [ExportFormat.CSV],
+    4: [ExportFormat.TXT, ExportFormat.JSON, ExportFormat.CSV],
 }
 
 InputFunc = Callable[[str], str]
@@ -103,7 +104,7 @@ class FourPCApp:
         self._print(
             "Escolha uma peça de cada categoria. A compatibilidade é\n"
             "verificada a cada escolha e, ao final, o orçamento pode ser\n"
-            "exportado em TXT ou JSON."
+            "exportado em TXT, JSON ou CSV."
         )
 
     def _show_main_menu(self) -> None:
@@ -267,13 +268,16 @@ class FourPCApp:
         self._print("Em qual formato deseja exportar o orçamento?")
         self._print("  1) TXT")
         self._print("  2) JSON")
-        self._print("  3) TXT e JSON")
+        self._print("  3) CSV (planilha)")
+        self._print("  4) Todos (TXT, JSON e CSV)")
         self._print("  0) Voltar ao menu")
-        choice = self._ask_option("Escolha uma opção: ", 3)
+        choice = self._ask_option(
+            "Escolha uma opção: ", len(EXPORT_CHOICES)
+        )
         if choice == 0:
             return False
 
-        # mesma data/hora pros dois arquivos terem o mesmo nome
+        # mesma data/hora pros arquivos terem o mesmo nome
         generated_at = datetime.now()
         paths = []
         try:

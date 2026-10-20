@@ -1,3 +1,5 @@
+import csv
+import io
 import json
 import textwrap
 from dataclasses import asdict
@@ -34,6 +36,7 @@ STATUS_TAGS: dict[Status, str] = {
 class ExportFormat(str, Enum):
     TXT = "txt"
     JSON = "json"
+    CSV = "csv"
 
 
 class BuildNotReadyError(Exception):
@@ -305,6 +308,39 @@ def to_dict(build: Build, generated_at: datetime) -> dict[str, Any]:
     }
 
 
+# número no formato brasileiro sem o "R$", pra planilha entender como valor
+# Ex.: 1299.9 -> "1299,90"
+def format_csv_number(value: Decimal) -> str:
+    return f"{value:.2f}".replace(".", ",")
+
+
+# Usei ponto e vírgula como separador porque no Excel em português a vírgula
+# já é o separador decimal.
+def render_csv(build: Build) -> str:
+    buffer = io.StringIO()
+    writer = csv.writer(buffer, delimiter=";", lineterminator="\n")
+    writer.writerow(["Categoria", "Peça", "Especificações", "Preço (R$)"])
+    for component in build.selected():
+        writer.writerow([
+            component.category.label,
+            component.name,
+            component.specs(),
+            format_csv_number(component.price),
+        ])
+    payment = payment_options(build.total_price)
+    discount = f"{PIX_DISCOUNT:.0%}"
+    writer.writerow(["Total", "", "", format_csv_number(payment.total)])
+    writer.writerow([
+        "À vista no PIX", "", f"{discount} de desconto",
+        format_csv_number(payment.pix_price),
+    ])
+    writer.writerow([
+        "Parcelado", "", f"{payment.installments}x sem juros de",
+        format_csv_number(payment.installment_price),
+    ])
+    return buffer.getvalue()
+
+
 def export_report(
     build: Build,
     directory: Path,
@@ -319,6 +355,11 @@ def export_report(
         generated_at = datetime.now()
     directory.mkdir(parents=True, exist_ok=True)
     path = directory / f"orcamento_{generated_at:%Y%m%d_%H%M%S}.{fmt.value}"
+
+    if fmt is ExportFormat.CSV:
+        # utf-8-sig coloca o BOM no começo, senão o Excel erra os acentos
+        path.write_text(render_csv(build), encoding="utf-8-sig")
+        return path
 
     if fmt is ExportFormat.TXT:
         content = render_report(build, generated_at)
