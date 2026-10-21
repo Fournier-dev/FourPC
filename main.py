@@ -11,6 +11,7 @@ from pathlib import Path
 from core.catalog import Catalog, CatalogError
 from core.models import Build, Category, Component
 from core.pricing import parse_brl
+from core.saved_build import SavedBuildError, load_build
 from core.report import (
     REPORT_WIDTH, THICK_LINE, THIN_LINE, ExportFormat, budget_warning,
     export_report, fit, format_brl, format_price_diff, format_result,
@@ -34,6 +35,7 @@ EXIT_OPTION = 0
 SUMMARY_OPTION = 8
 FINALIZE_OPTION = 9
 BUDGET_OPTION = 10
+LOAD_OPTION = 11
 
 # larguras das colunas na lista de opções de uma categoria
 NAME_WIDTH = 37
@@ -73,7 +75,7 @@ class FourPCApp:
         self._show_banner()
         while True:
             self._show_main_menu()
-            choice = self._ask_option("Escolha uma opção: ", BUDGET_OPTION)
+            choice = self._ask_option("Escolha uma opção: ", LOAD_OPTION)
             if choice == EXIT_OPTION:
                 if self._confirm(
                     "Deseja mesmo sair? A montagem atual será descartada. "
@@ -88,6 +90,8 @@ class FourPCApp:
                     return
             elif choice == BUDGET_OPTION:
                 self._set_budget()
+            elif choice == LOAD_OPTION:
+                self._load_saved_build()
             else:
                 self._choose_component(CATEGORIES[choice - 1])
 
@@ -150,6 +154,7 @@ class FourPCApp:
         )
         self._print(f"  {FINALIZE_OPTION}) Finalizar e exportar orçamento")
         self._print(f" {BUDGET_OPTION}) Definir orçamento máximo")
+        self._print(f" {LOAD_OPTION}) Carregar orçamento salvo (JSON)")
         self._print(f"  {EXIT_OPTION}) Sair")
 
     def _choose_component(self, category: Category) -> None:
@@ -327,6 +332,39 @@ class FourPCApp:
             if warning is not None:
                 self._print(f"[!] {warning}")
             return
+
+    # Dá pra digitar o caminho completo ou só o nome do arquivo, que aí
+    # eu procuro na pasta reports/
+    def _load_saved_build(self) -> None:
+        self._print("")
+        answer = self._input(
+            "Caminho do orçamento JSON (Enter para voltar): "
+        ).strip().strip('"')
+        if not answer:
+            return
+        path = Path(answer)
+        if not path.exists() and (self.reports_dir / answer).exists():
+            path = self.reports_dir / answer
+
+        try:
+            loaded = load_build(path, self.catalog)
+        except SavedBuildError as error:
+            self._print(f"\nNão foi possível carregar o orçamento: {error}")
+            return
+
+        if self.build.selected() and not self._confirm(
+            "A montagem atual será substituída. Continuar? (s/N): "
+        ):
+            return
+        self.build = loaded.build
+        count = len(loaded.build.selected())
+        self._print(f"\nOrçamento carregado: {count} peça(s).")
+        if loaded.missing_ids:
+            ids = ", ".join(loaded.missing_ids)
+            self._print(
+                f"[!] Peças que não existem mais no catálogo: {ids}. "
+                "Escolha outras para essas categorias."
+            )
 
     # regras que dariam erro se essa peça fosse escolhida agora
     def _conflicts_with(self, option: Component) -> list[str]:

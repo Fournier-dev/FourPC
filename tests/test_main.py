@@ -239,7 +239,7 @@ class FourPCAppTest(unittest.TestCase):
 
         self.assertEqual(
             session.output.count(
-                "Opção inválida. Digite um número de 0 a 10."
+                "Opção inválida. Digite um número de 0 a 11."
             ),
             2,
         )
@@ -294,6 +294,69 @@ class FourPCAppTest(unittest.TestCase):
         self.assertIn("Orçamento máximo atual: R$ 3.000,00", session.output)
         self.assertIn("Orçamento máximo removido.", session.output)
         self.assertIsNone(app.budget)
+
+    def test_load_exported_json_by_file_name(self) -> None:
+        # primeiro exporta um JSON, depois abre o programa de novo e carrega
+        self.run_app(select_all_first_options() + ["9", "2"])
+        json_file = next(self.reports_dir.glob("*.json"))
+        session = ScriptedSession(["11", json_file.name, "0", "s"])
+        app = FourPCApp(
+            small_catalog(), self.reports_dir, session.input, session.print
+        )
+
+        app.run()
+
+        self.assertIn("Orçamento carregado: 7 peça(s).", session.output)
+        self.assertTrue(app.build.is_complete)
+        self.assertEqual(app.build.total_price, 5400)
+
+    def test_load_warns_about_ids_not_in_catalog(self) -> None:
+        path = self.reports_dir / "antigo.json"
+        path.write_text(json.dumps({"components": [
+            {"category": "cpu", "id": "cpu-am5"},
+            {"category": "gpu", "id": "gpu-que-saiu"},
+        ]}), encoding="utf-8")
+        session = ScriptedSession(["11", str(path), "0", "s"])
+        app = FourPCApp(
+            small_catalog(), self.reports_dir, session.input, session.print
+        )
+
+        app.run()
+
+        self.assertIn("Orçamento carregado: 1 peça(s).", session.output)
+        self.assertIn("não existem mais no catálogo: gpu-que-saiu",
+                      session.output)
+        self.assertIsNone(app.build.get(Category.GPU))
+
+    def test_load_invalid_file_keeps_current_build(self) -> None:
+        inputs = ["1", "1", "11", "nao-existe.json", "0", "s"]
+        session = ScriptedSession(inputs)
+        app = FourPCApp(
+            small_catalog(), self.reports_dir, session.input, session.print
+        )
+
+        app.run()
+
+        self.assertIn("Não foi possível carregar o orçamento", session.output)
+        self.assertIsNotNone(app.build.get(Category.CPU))
+
+    def test_load_asks_before_replacing_build(self) -> None:
+        path = self.reports_dir / "outro.json"
+        path.write_text(json.dumps({"components": [
+            {"category": "cpu", "id": "cpu-intel"},
+        ]}), encoding="utf-8")
+        # responde "n" na confirmação, então fica a CPU AM5
+        inputs = ["1", "1", "11", str(path), "n", "0", "s"]
+        session = ScriptedSession(inputs)
+        catalog = small_catalog()
+        app = FourPCApp(
+            catalog, self.reports_dir, session.input, session.print
+        )
+
+        app.run()
+
+        self.assertIn("será substituída", session.output)
+        self.assertEqual(app.build.get(Category.CPU), catalog.get("cpu-am5"))
 
     def test_exit_requires_confirmation(self) -> None:
         session = self.run_app(["0", "n", "0", "s"])

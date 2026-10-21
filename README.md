@@ -22,6 +22,7 @@ No FourPC você escolhe as peças de um catálogo e o programa vai avisando quan
 - No resumo de energia também aparece a folga da fonte, que é quanto da potência dela fica sobrando (ex.: `Folga da fonte: 34%`)
 - Só deixa finalizar quando todas as peças foram escolhidas e está tudo compatível
 - Salva o orçamento em `.txt`, `.json` e/ou `.csv` na pasta `reports/` (no final dá pra escolher um formato só ou todos de uma vez)
+- Dá pra carregar de volta uma montagem a partir de um orçamento `.json` salvo antes (opção `11` do menu). As peças vêm do catálogo atual, então o preço já aparece atualizado. Se alguma peça do arquivo não existir mais no catálogo, o programa avisa quais foram e deixa essa categoria vazia pra você escolher outra
 
 ## Regras de compatibilidade
 
@@ -71,6 +72,7 @@ No Windows, se o comando `python` não funcionar, tente `py main.py`.
 - `8`: mostra o resumo com os preços e a compatibilidade
 - `9`: finaliza e salva o orçamento
 - `10`: define o orçamento máximo (aceita `5000`, `5.000,00` etc.; deixando vazio tira o limite)
+- `11`: carrega um orçamento `.json` salvo (pode digitar o caminho completo ou só o nome do arquivo que está em `reports/`)
 - `0`: sai do programa
 
 ### Testes
@@ -205,7 +207,8 @@ FourPC/
 │   ├── catalog.py       # lê o catálogo de peças do JSON
 │   ├── validators.py    # regras de compatibilidade
 │   ├── pricing.py       # PIX, parcelamento e orçamento máximo
-│   └── report.py        # resumo, formatação em R$ e exportação
+│   ├── report.py        # resumo, formatação em R$ e exportação
+│   └── saved_build.py   # carrega uma montagem de um orçamento JSON
 ├── data/
 │   └── catalog.json     # catálogo de peças
 └── tests/               # testes
