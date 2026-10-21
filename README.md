@@ -23,6 +23,7 @@ No FourPC você escolhe as peças de um catálogo e o programa vai avisando quan
 - Só deixa finalizar quando todas as peças foram escolhidas e está tudo compatível
 - Salva o orçamento em `.txt`, `.json` e/ou `.csv` na pasta `reports/` (no final dá pra escolher um formato só ou todos de uma vez)
 - Dá pra carregar de volta uma montagem a partir de um orçamento `.json` salvo antes (opção `11` do menu). As peças vêm do catálogo atual, então o preço já aparece atualizado. Se alguma peça do arquivo não existir mais no catálogo, o programa avisa quais foram e deixa essa categoria vazia pra você escolher outra
+- Tem 3 montagens prontas sugeridas (Básica, Intermediária e Avançada) pra quem não sabe por onde começar (opção `12` do menu). Elas ficam no `data/presets.json` e aparecem com o preço total já calculado. Depois de carregar dá pra trocar qualquer peça normalmente
 
 ## Regras de compatibilidade
 
@@ -73,6 +74,7 @@ No Windows, se o comando `python` não funcionar, tente `py main.py`.
 - `9`: finaliza e salva o orçamento
 - `10`: define o orçamento máximo (aceita `5000`, `5.000,00` etc.; deixando vazio tira o limite)
 - `11`: carrega um orçamento `.json` salvo (pode digitar o caminho completo ou só o nome do arquivo que está em `reports/`)
+- `12`: mostra as montagens prontas sugeridas e carrega a que você escolher
 - `0`: sai do programa
 
 ### Testes
@@ -208,13 +210,17 @@ FourPC/
 │   ├── validators.py    # regras de compatibilidade
 │   ├── pricing.py       # PIX, parcelamento e orçamento máximo
 │   ├── report.py        # resumo, formatação em R$ e exportação
-│   └── saved_build.py   # carrega uma montagem de um orçamento JSON
+│   ├── saved_build.py   # carrega uma montagem de um orçamento JSON
+│   └── presets.py       # lê as montagens prontas sugeridas
 ├── data/
-│   └── catalog.json     # catálogo de peças
+│   ├── catalog.json     # catálogo de peças
+│   └── presets.json     # montagens prontas (Básica, Intermediária...)
 └── tests/               # testes
 ```
 
 Pra adicionar uma peça nova é só colocar ela no `data/catalog.json`, seguindo o formato das outras da mesma categoria. As placas-mãe têm o campo `form_factor` (`ATX`, `mATX` ou `ITX`) e os gabinetes têm a lista `supported_form_factors` com os formatos de placa que cabem neles.
+
+As montagens prontas usam só os IDs das peças do catálogo, uma por categoria. Tem um teste que confere se todas estão completas e sem nenhuma incompatibilidade, então se alguém mudar o catálogo e quebrar uma delas, o teste avisa.
 
 ## O que eu aprendi
 

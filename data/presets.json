@@ -1,0 +1,43 @@
+{
+  "presets": [
+    {
+      "name": "Básica",
+      "description": "Para estudos, trabalho e jogos leves em Full HD.",
+      "components": {
+        "cpu": "cpu-r5-5600",
+        "motherboard": "mb-b550m-aorus",
+        "ram": "ram-ddr4-16",
+        "gpu": "gpu-rtx3050",
+        "psu": "psu-cv450",
+        "storage": "ssd-nv3-500",
+        "case": "case-air903"
+      }
+    },
+    {
+      "name": "Intermediária",
+      "description": "Roda os jogos atuais em Full HD com folga.",
+      "components": {
+        "cpu": "cpu-r5-7600",
+        "motherboard": "mb-b650m-pro-rs",
+        "ram": "ram-ddr5-32",
+        "gpu": "gpu-rtx4060",
+        "psu": "psu-a650bn",
+        "storage": "ssd-sn770-1tb",
+        "case": "case-lancool216"
+      }
+    },
+    {
+      "name": "Avançada",
+      "description": "Para jogar em 1440p e fazer stream ou edição de vídeo.",
+      "components": {
+        "cpu": "cpu-r7-7800x3d",
+        "motherboard": "mb-b650-tomahawk",
+        "ram": "ram-ddr5-32",
+        "gpu": "gpu-rtx5070",
+        "psu": "psu-rm750e",
+        "storage": "ssd-990pro-2tb",
+        "case": "case-4000d"
+      }
+    }
+  ]
+}

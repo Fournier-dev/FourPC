@@ -239,7 +239,7 @@ class FourPCAppTest(unittest.TestCase):
 
         self.assertEqual(
             session.output.count(
-                "Opção inválida. Digite um número de 0 a 11."
+                "Opção inválida. Digite um número de 0 a 12."
             ),
             2,
         )
@@ -357,6 +357,69 @@ class FourPCAppTest(unittest.TestCase):
 
         self.assertIn("será substituída", session.output)
         self.assertEqual(app.build.get(Category.CPU), catalog.get("cpu-am5"))
+
+    def write_presets(self) -> Path:
+        path = self.reports_dir / "presets.json"
+        path.write_text(json.dumps({"presets": [
+            {"name": "Só CPU", "description": "Uma peça só.",
+             "components": {"cpu": "cpu-intel"}},
+            {"name": "Completa", "description": "Tudo compatível.",
+             "components": {
+                 "cpu": "cpu-am5", "motherboard": "mb-am5",
+                 "ram": "ram-ddr5", "gpu": "gpu-small", "psu": "psu-650",
+                 "storage": "ssd-1", "case": "case-1",
+             }},
+        ]}), encoding="utf-8")
+        return path
+
+    def run_with_presets(self, inputs: list[str]) -> tuple[
+        FourPCApp, ScriptedSession
+    ]:
+        session = ScriptedSession(inputs)
+        app = FourPCApp(
+            small_catalog(), self.reports_dir, session.input, session.print,
+            presets_path=self.write_presets(),
+        )
+        app.run()
+        return app, session
+
+    def test_load_preset_and_finalize(self) -> None:
+        app, session = self.run_with_presets(["12", "2", "9", "2"])
+
+        self.assertIn("MONTAGENS PRONTAS", session.output)
+        self.assertIn("Tudo compatível.", session.output)
+        self.assertIn("Montagem carregada: Completa (R$ 5.400,00).",
+                      session.output)
+        self.assertTrue(app.build.is_complete)
+        self.assertIn("Obrigado por usar o FourPC!", session.output)
+
+    def test_preset_asks_before_replacing_build(self) -> None:
+        # escolhe a CPU AM5 e responde "n" ao carregar a montagem pronta
+        app, session = self.run_with_presets(
+            ["1", "1", "12", "1", "n", "0", "s"]
+        )
+
+        self.assertIn("será substituída", session.output)
+        self.assertEqual(
+            app.build.get(Category.CPU), app.catalog.get("cpu-am5")
+        )
+
+    def test_preset_back_keeps_build(self) -> None:
+        app, _ = self.run_with_presets(["12", "0", "0", "s"])
+
+        self.assertEqual(app.build.selected(), [])
+
+    def test_preset_file_error_is_shown(self) -> None:
+        session = ScriptedSession(["12", "0", "s"])
+        app = FourPCApp(
+            small_catalog(), self.reports_dir, session.input, session.print,
+            presets_path=self.reports_dir / "nao-existe.json",
+        )
+
+        app.run()
+
+        self.assertIn("Não foi possível carregar as montagens prontas",
+                      session.output)
 
     def test_exit_requires_confirmation(self) -> None:
         session = self.run_app(["0", "n", "0", "s"])

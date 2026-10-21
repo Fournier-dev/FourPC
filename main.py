@@ -10,6 +10,7 @@ from pathlib import Path
 
 from core.catalog import Catalog, CatalogError
 from core.models import Build, Category, Component
+from core.presets import DEFAULT_PRESETS_PATH, PresetError, load_presets
 from core.pricing import parse_brl
 from core.saved_build import SavedBuildError, load_build
 from core.report import (
@@ -36,6 +37,7 @@ SUMMARY_OPTION = 8
 FINALIZE_OPTION = 9
 BUDGET_OPTION = 10
 LOAD_OPTION = 11
+PRESETS_OPTION = 12
 
 # larguras das colunas na lista de opções de uma categoria
 NAME_WIDTH = 37
@@ -62,9 +64,11 @@ class FourPCApp:
         reports_dir: Path = REPORTS_DIR,
         input_func: InputFunc = input,
         output_func: OutputFunc = print,
+        presets_path: Path = DEFAULT_PRESETS_PATH,
     ) -> None:
         self.catalog = catalog
         self.reports_dir = reports_dir
+        self.presets_path = presets_path
         self.build = Build()
         # orçamento máximo em R$, None = sem limite
         self.budget: Decimal | None = None
@@ -75,7 +79,7 @@ class FourPCApp:
         self._show_banner()
         while True:
             self._show_main_menu()
-            choice = self._ask_option("Escolha uma opção: ", LOAD_OPTION)
+            choice = self._ask_option("Escolha uma opção: ", PRESETS_OPTION)
             if choice == EXIT_OPTION:
                 if self._confirm(
                     "Deseja mesmo sair? A montagem atual será descartada. "
@@ -92,6 +96,8 @@ class FourPCApp:
                 self._set_budget()
             elif choice == LOAD_OPTION:
                 self._load_saved_build()
+            elif choice == PRESETS_OPTION:
+                self._choose_preset()
             else:
                 self._choose_component(CATEGORIES[choice - 1])
 
@@ -155,6 +161,7 @@ class FourPCApp:
         self._print(f"  {FINALIZE_OPTION}) Finalizar e exportar orçamento")
         self._print(f" {BUDGET_OPTION}) Definir orçamento máximo")
         self._print(f" {LOAD_OPTION}) Carregar orçamento salvo (JSON)")
+        self._print(f" {PRESETS_OPTION}) Montagens prontas sugeridas")
         self._print(f"  {EXIT_OPTION}) Sair")
 
     def _choose_component(self, category: Category) -> None:
@@ -365,6 +372,46 @@ class FourPCApp:
                 f"[!] Peças que não existem mais no catálogo: {ids}. "
                 "Escolha outras para essas categorias."
             )
+
+    # as montagens prontas são só um ponto de partida, depois dá pra trocar
+    # qualquer peça normalmente
+    def _choose_preset(self) -> None:
+        try:
+            presets = load_presets(self.catalog, self.presets_path)
+        except PresetError as error:
+            self._print(
+                f"\nNão foi possível carregar as montagens prontas: {error}"
+            )
+            return
+        if not presets:
+            self._print("\nNenhuma montagem pronta cadastrada.")
+            return
+
+        self._print("")
+        self._print(THIN_LINE)
+        self._print("MONTAGENS PRONTAS - escolha uma opção")
+        self._print(THIN_LINE)
+        for number, preset in enumerate(presets, start=1):
+            total = format_brl(preset.build.total_price)
+            self._print(f"  {number}) {fit(preset.name, 52):<52}{total:>15}")
+            if preset.description:
+                self._print(f"     {preset.description}")
+        self._print("  0) Voltar")
+
+        choice = self._ask_option("Escolha a montagem: ", len(presets))
+        if choice == 0:
+            return
+        if self.build.selected() and not self._confirm(
+            "A montagem atual será substituída. Continuar? (s/N): "
+        ):
+            return
+        preset = presets[choice - 1]
+        self.build = preset.build
+        self._print(
+            f"\nMontagem carregada: {preset.name} "
+            f"({format_brl(preset.build.total_price)})."
+        )
+        self._print("Você pode trocar qualquer peça pelo menu.")
 
     # regras que dariam erro se essa peça fosse escolhida agora
     def _conflicts_with(self, option: Component) -> list[str]:
