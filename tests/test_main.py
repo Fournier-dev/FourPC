@@ -239,7 +239,7 @@ class FourPCAppTest(unittest.TestCase):
 
         self.assertEqual(
             session.output.count(
-                "Opção inválida. Digite um número de 0 a 12."
+                "Opção inválida. Digite um número de 0 a 13."
             ),
             2,
         )
@@ -420,6 +420,38 @@ class FourPCAppTest(unittest.TestCase):
 
         self.assertIn("Não foi possível carregar as montagens prontas",
                       session.output)
+
+    def test_saved_reports_empty_folder(self) -> None:
+        session = self.run_app(["13", "0", "s"])
+
+        self.assertIn("Nenhum orçamento salvo", session.output)
+
+    def test_saved_reports_lists_and_loads_json(self) -> None:
+        self.run_app(select_all_first_options() + ["9", "4"])
+        session = ScriptedSession(["13", "1", "0", "s"])
+        app = FourPCApp(
+            small_catalog(), self.reports_dir, session.input, session.print
+        )
+
+        app.run()
+
+        self.assertIn("ORÇAMENTOS SALVOS (1)", session.output)
+        self.assertIn("TXT, JSON, CSV", session.output)
+        self.assertIn("R$ 5.400,00", session.output)
+        self.assertIn("Orçamento carregado: 7 peça(s).", session.output)
+        self.assertTrue(app.build.is_complete)
+
+    def test_saved_report_without_json_is_not_loaded(self) -> None:
+        self.run_app(select_all_first_options() + ["9", "1"])
+        session = ScriptedSession(["13", "1", "0", "s"])
+        app = FourPCApp(
+            small_catalog(), self.reports_dir, session.input, session.print
+        )
+
+        app.run()
+
+        self.assertIn("não tem o arquivo JSON", session.output)
+        self.assertEqual(app.build.selected(), [])
 
     def test_exit_requires_confirmation(self) -> None:
         session = self.run_app(["0", "n", "0", "s"])

@@ -13,6 +13,7 @@ from core.models import Build, Category, Component
 from core.presets import DEFAULT_PRESETS_PATH, PresetError, load_presets
 from core.pricing import parse_brl
 from core.saved_build import SavedBuildError, load_build
+from core.saved_reports import list_saved_reports
 from core.report import (
     REPORT_WIDTH, THICK_LINE, THIN_LINE, ExportFormat, budget_warning,
     export_report, fit, format_brl, format_price_diff, format_result,
@@ -38,6 +39,7 @@ FINALIZE_OPTION = 9
 BUDGET_OPTION = 10
 LOAD_OPTION = 11
 PRESETS_OPTION = 12
+SAVED_REPORTS_OPTION = 13
 
 # larguras das colunas na lista de opções de uma categoria
 NAME_WIDTH = 37
@@ -79,7 +81,9 @@ class FourPCApp:
         self._show_banner()
         while True:
             self._show_main_menu()
-            choice = self._ask_option("Escolha uma opção: ", PRESETS_OPTION)
+            choice = self._ask_option(
+                "Escolha uma opção: ", SAVED_REPORTS_OPTION
+            )
             if choice == EXIT_OPTION:
                 if self._confirm(
                     "Deseja mesmo sair? A montagem atual será descartada. "
@@ -98,6 +102,8 @@ class FourPCApp:
                 self._load_saved_build()
             elif choice == PRESETS_OPTION:
                 self._choose_preset()
+            elif choice == SAVED_REPORTS_OPTION:
+                self._list_saved_reports()
             else:
                 self._choose_component(CATEGORIES[choice - 1])
 
@@ -162,6 +168,7 @@ class FourPCApp:
         self._print(f" {BUDGET_OPTION}) Definir orçamento máximo")
         self._print(f" {LOAD_OPTION}) Carregar orçamento salvo (JSON)")
         self._print(f" {PRESETS_OPTION}) Montagens prontas sugeridas")
+        self._print(f" {SAVED_REPORTS_OPTION}) Ver orçamentos salvos")
         self._print(f"  {EXIT_OPTION}) Sair")
 
     def _choose_component(self, category: Category) -> None:
@@ -352,7 +359,9 @@ class FourPCApp:
         path = Path(answer)
         if not path.exists() and (self.reports_dir / answer).exists():
             path = self.reports_dir / answer
+        self._load_from_path(path)
 
+    def _load_from_path(self, path: Path) -> None:
         try:
             loaded = load_build(path, self.catalog)
         except SavedBuildError as error:
@@ -372,6 +381,43 @@ class FourPCApp:
                 f"[!] Peças que não existem mais no catálogo: {ids}. "
                 "Escolha outras para essas categorias."
             )
+
+    # mostra o que tem na pasta reports/ e deixa carregar os que têm JSON
+    def _list_saved_reports(self) -> None:
+        reports = list_saved_reports(self.reports_dir)
+        if not reports:
+            self._print(f"\nNenhum orçamento salvo em {self.reports_dir}.")
+            return
+
+        self._print("")
+        self._print(THIN_LINE)
+        self._print(f"ORÇAMENTOS SALVOS ({len(reports)})")
+        self._print(THIN_LINE)
+        for number, report in enumerate(reports, start=1):
+            date = f"{report.generated_at:%d/%m/%Y %H:%M:%S}"
+            formats = ", ".join(fmt.value.upper() for fmt in report.formats)
+            total = "" if report.total is None else format_brl(report.total)
+            line = f"  {number:>2}) {date}   {formats:<16}"
+            width = REPORT_WIDTH - len(line)
+            self._print(f"{line}{total:>{width}}".rstrip())
+        self._print(THIN_LINE)
+        self._print(f"Pasta: {self.reports_dir}")
+        self._print("   0) Voltar")
+
+        choice = self._ask_option(
+            "Número do orçamento para carregar (precisa ter JSON): ",
+            len(reports),
+        )
+        if choice == 0:
+            return
+        json_path = reports[choice - 1].json_path
+        if json_path is None:
+            self._print(
+                "\nEsse orçamento não tem o arquivo JSON, então não dá "
+                "pra carregar a montagem."
+            )
+            return
+        self._load_from_path(json_path)
 
     # as montagens prontas são só um ponto de partida, depois dá pra trocar
     # qualquer peça normalmente

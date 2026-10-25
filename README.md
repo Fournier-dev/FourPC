@@ -24,6 +24,7 @@ No FourPC você escolhe as peças de um catálogo e o programa vai avisando quan
 - Salva o orçamento em `.txt`, `.json` e/ou `.csv` na pasta `reports/` (no final dá pra escolher um formato só ou todos de uma vez)
 - Dá pra carregar de volta uma montagem a partir de um orçamento `.json` salvo antes (opção `11` do menu). As peças vêm do catálogo atual, então o preço já aparece atualizado. Se alguma peça do arquivo não existir mais no catálogo, o programa avisa quais foram e deixa essa categoria vazia pra você escolher outra
 - Tem 3 montagens prontas sugeridas (Básica, Intermediária e Avançada) pra quem não sabe por onde começar (opção `12` do menu). Elas ficam no `data/presets.json` e aparecem com o preço total já calculado. Depois de carregar dá pra trocar qualquer peça normalmente
+- Dá pra ver a lista dos orçamentos já salvos na pasta `reports/` (opção `13` do menu), do mais novo pro mais antigo. Os arquivos TXT, JSON e CSV gerados juntos aparecem numa linha só, com a data, os formatos e o total (lido do JSON). Digitando o número, a montagem é carregada de volta (só funciona se aquele orçamento tiver o `.json`)
 
 ## Regras de compatibilidade
 
@@ -75,6 +76,7 @@ No Windows, se o comando `python` não funcionar, tente `py main.py`.
 - `10`: define o orçamento máximo (aceita `5000`, `5.000,00` etc.; deixando vazio tira o limite)
 - `11`: carrega um orçamento `.json` salvo (pode digitar o caminho completo ou só o nome do arquivo que está em `reports/`)
 - `12`: mostra as montagens prontas sugeridas e carrega a que você escolher
+- `13`: lista os orçamentos salvos em `reports/` e deixa carregar um deles
 - `0`: sai do programa
 
 ### Testes
@@ -211,6 +213,7 @@ FourPC/
 │   ├── pricing.py       # PIX, parcelamento e orçamento máximo
 │   ├── report.py        # resumo, formatação em R$ e exportação
 │   ├── saved_build.py   # carrega uma montagem de um orçamento JSON
+│   ├── saved_reports.py # lista os orçamentos salvos em reports/
 │   └── presets.py       # lê as montagens prontas sugeridas
 ├── data/
 │   ├── catalog.json     # catálogo de peças
