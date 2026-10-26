@@ -1,14 +1,15 @@
 # FourPC - Simulador de Montagem de PC
-# Pra rodar: python main.py
+# Pra rodar: python main.py (ou python main.py --catalogo outro.json)
 
+import argparse
 import io
 import sys
-from collections.abc import Callable
+from collections.abc import Callable, Sequence
 from datetime import datetime
 from decimal import Decimal
 from pathlib import Path
 
-from core.catalog import Catalog, CatalogError
+from core.catalog import DEFAULT_CATALOG_PATH, Catalog, CatalogError
 from core.models import Build, Category, Component
 from core.presets import DEFAULT_PRESETS_PATH, PresetError, load_presets
 from core.pricing import parse_brl
@@ -489,10 +490,28 @@ def _use_utf8_output() -> None:
             stream.reconfigure(encoding="utf-8")
 
 
-def main() -> int:
+def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
+    parser = argparse.ArgumentParser(
+        prog="main.py",
+        description="FourPC - Simulador de Montagem de PC",
+    )
+    parser.add_argument(
+        "--catalogo",
+        metavar="CAMINHO",
+        type=Path,
+        default=DEFAULT_CATALOG_PATH,
+        help="arquivo JSON de catálogo a usar (padrão: data/catalog.json)",
+    )
+    return parser.parse_args(argv)
+
+
+# argv como parâmetro pra dar pra testar sem mexer no sys.argv
+def main(argv: Sequence[str] | None = None) -> int:
     _use_utf8_output()
+    args = parse_args(argv)
+    catalog_path: Path = args.catalogo
     try:
-        catalog = Catalog.from_json()
+        catalog = Catalog.from_json(catalog_path)
     except CatalogError as error:
         print(f"Erro ao carregar o catálogo: {error}", file=sys.stderr)
         return 1

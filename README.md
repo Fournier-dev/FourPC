@@ -68,6 +68,14 @@ python main.py
 
 No Windows, se o comando `python` não funcionar, tente `py main.py`.
 
+Por padrão ele usa o catálogo `data/catalog.json`, mas dá pra passar outro arquivo com o mesmo formato usando `--catalogo`:
+
+```bash
+python main.py --catalogo meu_catalogo.json
+```
+
+Se o arquivo não existir ou estiver com algum problema, o programa mostra o erro e nem abre o menu. O `python main.py --help` lista as opções.
+
 ### Usando o menu
 
 - `1` a `7`: escolhe a peça de cada categoria
