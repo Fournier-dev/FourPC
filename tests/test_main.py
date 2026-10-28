@@ -5,6 +5,7 @@ from collections.abc import Iterable
 from pathlib import Path
 
 from core.catalog import Catalog
+from core.colors import GREEN, RED, RESET
 from core.models import Category, Component, RamType
 from main import FourPCApp
 from tests.helpers import (
@@ -452,6 +453,38 @@ class FourPCAppTest(unittest.TestCase):
 
         self.assertIn("não tem o arquivo JSON", session.output)
         self.assertEqual(app.build.selected(), [])
+
+    def test_colored_output_paints_tags(self) -> None:
+        inputs = ["1", "1", "2", "2", "8", "", "0", "s"]
+        session = ScriptedSession(inputs)
+        app = FourPCApp(
+            small_catalog(), self.reports_dir, session.input, session.print,
+            use_color=True,
+        )
+
+        app.run()
+
+        self.assertIn(f"{RED}[ERRO]{RESET}", session.output)
+        self.assertIn(f"{RED}[!]{RESET}", session.output)
+
+    def test_colored_output_keeps_txt_without_color(self) -> None:
+        session = ScriptedSession(select_all_first_options() + ["9", "1"])
+        app = FourPCApp(
+            small_catalog(), self.reports_dir, session.input, session.print,
+            use_color=True,
+        )
+
+        app.run()
+
+        self.assertIn(f"{GREEN}[ OK ]{RESET}", session.output)
+        txt_file = next(self.reports_dir.glob("*.txt"))
+        self.assertNotIn("\033[", txt_file.read_text(encoding="utf-8"))
+
+    def test_output_has_no_color_by_default(self) -> None:
+        session = self.run_app(["1", "1", "2", "2", "8", "", "0", "s"])
+
+        self.assertIn("[ERRO]", session.output)
+        self.assertNotIn("\033[", session.output)
 
     def test_exit_requires_confirmation(self) -> None:
         session = self.run_app(["0", "n", "0", "s"])

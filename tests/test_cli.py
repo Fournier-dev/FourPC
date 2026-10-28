@@ -84,5 +84,38 @@ class MainCatalogTest(unittest.TestCase):
         app_class.assert_not_called()
 
 
+class FakeTerminal(io.StringIO):
+    def isatty(self) -> bool:
+        return True
+
+
+@mock.patch("main._use_utf8_output")
+@mock.patch("main._enable_ansi_colors", return_value=True)
+class MainColorTest(unittest.TestCase):
+    def _use_color(self, environ: dict[str, str]) -> bool:
+        with mock.patch.dict("os.environ", environ, clear=True):
+            with mock.patch("sys.stdout", FakeTerminal()):
+                with mock.patch("main.FourPCApp") as app_class:
+                    main.main([])
+        value: bool = app_class.call_args.kwargs["use_color"]
+        return value
+
+    def test_terminal_liga_a_cor(
+        self, _ansi: mock.Mock, _utf8: mock.Mock
+    ) -> None:
+        self.assertTrue(self._use_color({}))
+
+    def test_no_color_desliga_a_cor(
+        self, _ansi: mock.Mock, _utf8: mock.Mock
+    ) -> None:
+        self.assertFalse(self._use_color({"NO_COLOR": "1"}))
+
+    def test_sem_suporte_a_ansi_fica_sem_cor(
+        self, ansi: mock.Mock, _utf8: mock.Mock
+    ) -> None:
+        ansi.return_value = False
+        self.assertFalse(self._use_color({}))
+
+
 if __name__ == "__main__":
     unittest.main()

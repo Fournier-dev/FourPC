@@ -3,6 +3,7 @@
 
 import argparse
 import io
+import os
 import sys
 from collections.abc import Callable, Sequence
 from datetime import datetime
@@ -10,6 +11,7 @@ from decimal import Decimal
 from pathlib import Path
 
 from core.catalog import DEFAULT_CATALOG_PATH, Catalog, CatalogError
+from core.colors import colorize, should_use_color
 from core.models import Build, Category, Component
 from core.presets import DEFAULT_PRESETS_PATH, PresetError, load_presets
 from core.pricing import parse_brl
@@ -68,6 +70,7 @@ class FourPCApp:
         input_func: InputFunc = input,
         output_func: OutputFunc = print,
         presets_path: Path = DEFAULT_PRESETS_PATH,
+        use_color: bool = False,
     ) -> None:
         self.catalog = catalog
         self.reports_dir = reports_dir
@@ -76,7 +79,15 @@ class FourPCApp:
         # orçamento máximo em R$, None = sem limite
         self.budget: Decimal | None = None
         self._input = input_func
-        self._print = output_func
+        self._output = output_func
+        self.use_color = use_color
+
+    # tudo que vai pra tela passa por aqui, então a cor fica num lugar só
+    # (o TXT exportado não passa por aqui e sai sem cor)
+    def _print(self, text: str = "") -> None:
+        if self.use_color:
+            text = colorize(text)
+        self._output(text)
 
     def run(self) -> None:
         self._show_banner()
@@ -490,6 +501,31 @@ def _use_utf8_output() -> None:
             stream.reconfigure(encoding="utf-8")
 
 
+# O console antigo do Windows só entende as cores ANSI depois de ligar o
+# modo de terminal virtual. Se não der certo, o programa segue sem cor.
+def _enable_ansi_colors() -> bool:
+    if sys.platform != "win32":
+        return True
+    try:
+        import ctypes
+
+        kernel32 = ctypes.windll.kernel32
+        handle = kernel32.GetStdHandle(-11)  # saída padrão
+        mode = ctypes.c_ulong()
+        if not kernel32.GetConsoleMode(handle, ctypes.byref(mode)):
+            return False
+        enable_vt = 0x0004  # ENABLE_VIRTUAL_TERMINAL_PROCESSING
+        return bool(kernel32.SetConsoleMode(handle, mode.value | enable_vt))
+    except (AttributeError, OSError):
+        return False
+
+
+def _color_enabled() -> bool:
+    if not should_use_color(sys.stdout, os.environ):
+        return False
+    return _enable_ansi_colors()
+
+
 def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         prog="main.py",
@@ -517,7 +553,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         return 1
 
     try:
-        FourPCApp(catalog).run()
+        FourPCApp(catalog, use_color=_color_enabled()).run()
     except (KeyboardInterrupt, EOFError):
         print("\n\nMontagem interrompida. Até a próxima!")
     return 0

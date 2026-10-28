@@ -24,6 +24,7 @@ No FourPC você escolhe as peças de um catálogo e o programa vai avisando quan
 - Salva o orçamento em `.txt`, `.json` e/ou `.csv` na pasta `reports/` (no final dá pra escolher um formato só ou todos de uma vez)
 - Dá pra carregar de volta uma montagem a partir de um orçamento `.json` salvo antes (opção `11` do menu). As peças vêm do catálogo atual, então o preço já aparece atualizado. Se alguma peça do arquivo não existir mais no catálogo, o programa avisa quais foram e deixa essa categoria vazia pra você escolher outra
 - Tem 3 montagens prontas sugeridas (Básica, Intermediária e Avançada) pra quem não sabe por onde começar (opção `12` do menu). Elas ficam no `data/presets.json` e aparecem com o preço total já calculado. Depois de carregar dá pra trocar qualquer peça normalmente
+- No terminal as etiquetas aparecem coloridas: `[ OK ]` em verde, `[ERRO]` e `[!]` em vermelho e `[AVISO]` e `[i]` em amarelo. A cor só é usada quando a saída é um terminal mesmo (se mandar pra um arquivo ou pipe, sai sem cor) e o orçamento TXT salvo nunca tem cor
 - Dá pra ver a lista dos orçamentos já salvos na pasta `reports/` (opção `13` do menu), do mais novo pro mais antigo. Os arquivos TXT, JSON e CSV gerados juntos aparecem numa linha só, com a data, os formatos e o total (lido do JSON). Digitando o número, a montagem é carregada de volta (só funciona se aquele orçamento tiver o `.json`)
 
 ## Regras de compatibilidade
@@ -75,6 +76,14 @@ python main.py --catalogo meu_catalogo.json
 ```
 
 Se o arquivo não existir ou estiver com algum problema, o programa mostra o erro e nem abre o menu. O `python main.py --help` lista as opções.
+
+Se preferir sem cores, é só definir a variável de ambiente `NO_COLOR` (segui a convenção do [no-color.org](https://no-color.org)):
+
+```bash
+NO_COLOR=1 python main.py
+```
+
+No PowerShell: `$env:NO_COLOR = "1"; python main.py`.
 
 ### Usando o menu
 
@@ -220,6 +229,7 @@ FourPC/
 │   ├── validators.py    # regras de compatibilidade
 │   ├── pricing.py       # PIX, parcelamento e orçamento máximo
 │   ├── report.py        # resumo, formatação em R$ e exportação
+│   ├── colors.py        # cores das etiquetas no terminal
 │   ├── saved_build.py   # carrega uma montagem de um orçamento JSON
 │   ├── saved_reports.py # lista os orçamentos salvos em reports/
 │   └── presets.py       # lê as montagens prontas sugeridas
