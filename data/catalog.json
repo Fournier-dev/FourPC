@@ -3,17 +3,21 @@
     {"id": "cpu-r5-5600", "name": "AMD Ryzen 5 5600", "socket": "AM4", "tdp_watts": 65, "price": 699.90},
     {"id": "cpu-r7-5700x3d", "name": "AMD Ryzen 7 5700X3D", "socket": "AM4", "tdp_watts": 105, "price": 1399.90},
     {"id": "cpu-r5-7600", "name": "AMD Ryzen 5 7600", "socket": "AM5", "tdp_watts": 65, "price": 1149.90},
+    {"id": "cpu-r5-9600x", "name": "AMD Ryzen 5 9600X", "socket": "AM5", "tdp_watts": 65, "price": 1499.90},
     {"id": "cpu-r7-7800x3d", "name": "AMD Ryzen 7 7800X3D", "socket": "AM5", "tdp_watts": 120, "price": 2599.90},
     {"id": "cpu-r9-9950x", "name": "AMD Ryzen 9 9950X", "socket": "AM5", "tdp_watts": 170, "price": 4299.90},
     {"id": "cpu-i5-12400f", "name": "Intel Core i5-12400F", "socket": "LGA1700", "tdp_watts": 65, "price": 749.90},
+    {"id": "cpu-i5-13400f", "name": "Intel Core i5-13400F", "socket": "LGA1700", "tdp_watts": 65, "price": 949.90},
     {"id": "cpu-i5-14600k", "name": "Intel Core i5-14600K", "socket": "LGA1700", "tdp_watts": 125, "price": 1699.90},
     {"id": "cpu-i7-14700k", "name": "Intel Core i7-14700K", "socket": "LGA1700", "tdp_watts": 125, "price": 2399.90},
     {"id": "cpu-ultra7-265k", "name": "Intel Core Ultra 7 265K", "socket": "LGA1851", "tdp_watts": 125, "price": 2499.90}
   ],
   "motherboard": [
+    {"id": "mb-a520m-k", "name": "ASUS Prime A520M-K", "socket": "AM4", "ram_type": "DDR4", "form_factor": "mATX", "price": 499.90},
     {"id": "mb-b550m-aorus", "name": "Gigabyte B550M Aorus Elite", "socket": "AM4", "ram_type": "DDR4", "form_factor": "mATX", "price": 799.90},
     {"id": "mb-b650m-pro-rs", "name": "ASRock B650M Pro RS", "socket": "AM5", "ram_type": "DDR5", "form_factor": "mATX", "price": 1099.90},
     {"id": "mb-b650-tomahawk", "name": "MSI MAG B650 Tomahawk WiFi", "socket": "AM5", "ram_type": "DDR5", "form_factor": "ATX", "price": 1699.90},
+    {"id": "mb-b650e-i-strix", "name": "ASUS ROG Strix B650E-I Gaming WiFi", "socket": "AM5", "ram_type": "DDR5", "form_factor": "ITX", "price": 2199.90},
     {"id": "mb-b760m-ddr4", "name": "MSI PRO B760M-A DDR4", "socket": "LGA1700", "ram_type": "DDR4", "form_factor": "mATX", "price": 899.90},
     {"id": "mb-z790-tuf", "name": "ASUS TUF Gaming Z790-Plus WiFi", "socket": "LGA1700", "ram_type": "DDR5", "form_factor": "ATX", "price": 1999.90},
     {"id": "mb-z890-aorus", "name": "Gigabyte Z890 Aorus Elite WiFi7", "socket": "LGA1851", "ram_type": "DDR5", "form_factor": "ATX", "price": 2299.90}
@@ -30,6 +34,8 @@
     {"id": "gpu-rtx3050", "name": "NVIDIA GeForce RTX 3050 6GB", "power_watts": 70, "price": 1199.90},
     {"id": "gpu-rtx4060", "name": "NVIDIA GeForce RTX 4060 8GB", "power_watts": 115, "price": 1899.90},
     {"id": "gpu-rx7600", "name": "AMD Radeon RX 7600 8GB", "power_watts": 165, "price": 1699.90},
+    {"id": "gpu-rtx5060", "name": "NVIDIA GeForce RTX 5060 8GB", "power_watts": 145, "price": 2299.90},
+    {"id": "gpu-rx9060xt", "name": "AMD Radeon RX 9060 XT 16GB", "power_watts": 160, "price": 2799.90},
     {"id": "gpu-rtx5070", "name": "NVIDIA GeForce RTX 5070 12GB", "power_watts": 250, "price": 4299.90},
     {"id": "gpu-rx9070xt", "name": "AMD Radeon RX 9070 XT 16GB", "power_watts": 304, "price": 4999.90},
     {"id": "gpu-rtx5090", "name": "NVIDIA GeForce RTX 5090 32GB", "power_watts": 575, "price": 16999.90}

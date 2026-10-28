@@ -197,6 +197,27 @@ class DefaultCatalogTest(unittest.TestCase):
             assert isinstance(cpu, CPU)
             self.assertIn(cpu.socket, board_sockets, cpu.name)
 
+    def test_every_motherboard_has_a_compatible_cpu(self) -> None:
+        cpu_sockets = {
+            cpu.socket for cpu in self.catalog.options(Category.CPU)
+            if isinstance(cpu, CPU)
+        }
+        for board in self.catalog.options(Category.MOTHERBOARD):
+            assert isinstance(board, Motherboard)
+            self.assertIn(board.socket, cpu_sockets, board.name)
+
+    def test_every_price_is_positive(self) -> None:
+        for category in Category:
+            for option in self.catalog.options(category):
+                self.assertGreater(option.price, Decimal("0"), option.name)
+
+    # o README fala quantas peças tem, então o teste avisa se mudar
+    def test_catalog_has_expected_number_of_parts(self) -> None:
+        total = sum(
+            len(self.catalog.options(category)) for category in Category
+        )
+        self.assertEqual(total, 48)
+
     def test_every_motherboard_has_compatible_memory(self) -> None:
         ram_types = {
             ram.ram_type for ram in self.catalog.options(Category.RAM)

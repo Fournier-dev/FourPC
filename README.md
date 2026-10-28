@@ -8,7 +8,7 @@ No FourPC você escolhe as peças de um catálogo e o programa vai avisando quan
 
 ## O que ele faz
 
-- Mostra um catálogo com 42 peças (processadores, placas-mãe, memórias, placas de vídeo, fontes, SSDs/HDs e gabinetes)
+- Mostra um catálogo com 48 peças (processadores, placas-mãe, memórias, placas de vídeo, fontes, SSDs/HDs e gabinetes)
 - Dá pra escolher e trocar as peças em qualquer ordem
 - Também dá pra remover a peça de uma categoria: quando já tem uma escolhida, a lista ganha a opção "Remover peça atual"
 - As opções de cada categoria aparecem do mais barato pro mais caro
