@@ -1,8 +1,10 @@
-# Roda os testes sozinho a cada push, pra eu saber se quebrei alguma coisa
+# Roda os testes sozinho, pra eu saber se quebrei alguma coisa.
+# Só no push da main e nos pull requests, senão a branch do PR roda duas vezes
 name: Testes
 
 on:
   push:
+    branches: [main]
   pull_request:
 
 jobs:
@@ -24,5 +26,13 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
 
-      - name: Roda os testes
+      # antes de instalar qualquer coisa, garante que o programa de terminal
+      # continua funcionando só com a biblioteca padrão
+      - name: Testa o programa de terminal sem dependências
+        run: python -m unittest
+
+      - name: Instala as dependências
+        run: pip install -r requirements-dev.txt
+
+      - name: Roda todos os testes (incluindo a API)
         run: python -m unittest -v

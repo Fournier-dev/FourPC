@@ -109,6 +109,48 @@ python -m unittest
 
 Os testes também rodam sozinhos no GitHub Actions a cada push, no Python 3.10 (a versão mínima) e no 3.12. O selo "Testes" no começo desse README mostra se a última execução passou.
 
+## Versão web
+
+Também estou fazendo uma versão do FourPC que roda no navegador, usando o [FastAPI](https://fastapi.tiangolo.com/). Ela usa as mesmas regras da pasta `core/`, então o site e o programa de terminal sempre dão o mesmo resultado.
+
+Pra rodar a versão web precisa instalar as dependências (o programa de terminal continua sem precisar de nada). O ideal é usar um ambiente virtual:
+
+1. Crie o ambiente virtual:
+
+```bash
+python -m venv .venv
+```
+
+2. Ative ele. No Windows:
+
+```bash
+.venv\Scripts\activate
+```
+
+No Linux ou no Mac é `source .venv/bin/activate`.
+
+3. Instale as dependências:
+
+```bash
+pip install -r requirements-dev.txt
+```
+
+4. Suba o servidor:
+
+```bash
+uvicorn web.app:app --reload
+```
+
+Também dá pra usar `python -m web`, que faz a mesma coisa.
+
+Depois é só abrir http://127.0.0.1:8000/docs no navegador. Essa página é a documentação da API, que o FastAPI gera sozinho, e dá pra testar cada rota por ali mesmo.
+
+| Método | Rota | O que faz |
+|--------|------|-----------|
+| GET | `/api/saude` | Mostra se o servidor está no ar |
+
+Com as dependências instaladas, o `python -m unittest` também roda os testes da API. Sem elas, esses testes são pulados.
+
 ## Como ficou
 
 Depois de escolher um processador AM5, as placas-mãe de outro soquete aparecem marcadas na lista:
@@ -243,6 +285,11 @@ FourPC/
 ├── data/
 │   ├── catalog.json     # catálogo de peças
 │   └── presets.json     # montagens prontas (Básica, Intermediária...)
+├── web/
+│   ├── app.py           # cria o app do FastAPI
+│   └── routes/api.py    # rotas da API
+├── requirements.txt     # dependências da versão web
+├── requirements-dev.txt # dependências pra testar e checar o código
 ├── tests/               # testes
 └── .github/workflows/
     └── testes.yml       # roda os testes no GitHub Actions a cada push
