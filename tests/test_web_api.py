@@ -185,5 +185,38 @@ class PresetsRouteTest(unittest.TestCase):
         self.assertIn("montagens prontas", response.json()["detail"])
 
 
+class ConflictsRouteTest(unittest.TestCase):
+    def setUp(self) -> None:
+        self.client = TestClient(create_app(web_catalog()))
+
+    def conflicts(self, components: dict[str, str]) -> Any:
+        return self.client.post(
+            "/api/montagens/conflitos", json={"components": components}
+        )
+
+    def test_marks_options_that_would_break_a_rule(self) -> None:
+        data = self.conflicts({"cpu": "cpu-am5"}).json()["conflicts"]
+
+        self.assertEqual(
+            data["motherboard"], {"mb-am4": ["Soquete CPU x Placa-Mãe"]}
+        )
+        self.assertEqual(data["cpu"], {})
+        self.assertEqual(data["extra_storage"], {})
+
+    def test_current_part_shows_up_when_it_conflicts(self) -> None:
+        data = self.conflicts(
+            {"cpu": "cpu-am5", "motherboard": "mb-am4"}
+        ).json()["conflicts"]
+
+        # trocar só a CPU por qualquer uma ainda quebra o soquete
+        self.assertIn("cpu-am5", data["cpu"])
+        self.assertIn("mb-am4", data["motherboard"])
+
+    def test_invalid_ids_return_422(self) -> None:
+        response = self.conflicts({"cpu": "nao-existe"})
+
+        self.assertEqual(response.status_code, 422)
+
+
 if __name__ == "__main__":
     unittest.main()

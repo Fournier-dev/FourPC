@@ -494,10 +494,13 @@ fieldset.category {
   white-space: nowrap;
 }
 
-/* resumo do lado, acompanha a rolagem da página */
+/* resumo do lado, acompanha a rolagem da página (e rola sozinho se ficar
+   maior que a tela) */
 .summary {
   position: sticky;
   top: 80px;
+  max-height: calc(100vh - 100px);
+  overflow-y: auto;
 }
 
 .summary h2 {
@@ -563,6 +566,122 @@ fieldset.category {
   color: var(--error);
 }
 
+/* peça que daria erro: borda vermelha e o motivo embaixo do nome */
+.option-conflict {
+  border-color: rgba(248, 113, 113, 0.45);
+}
+
+.option-conflict:hover,
+.option-conflict:has(input:checked) {
+  border-color: var(--error);
+}
+
+.option-conflict:has(input:checked) {
+  box-shadow: 0 0 0 1px var(--error), 0 0 16px rgba(248, 113, 113, 0.3);
+}
+
+.option-conflict-text {
+  color: var(--error);
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+/* painéis de pagamento, energia e compatibilidade */
+.panel {
+  margin-top: 1.25rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border);
+}
+
+.panel h3 {
+  margin-bottom: 0.5rem;
+  font-size: 1rem;
+}
+
+.panel p {
+  margin: 0;
+  font-size: 0.9rem;
+}
+
+.panel-list {
+  display: grid;
+  gap: 0.35rem;
+  margin: 0;
+}
+
+.panel-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+  font-size: 0.9rem;
+}
+
+.panel-row dt {
+  color: var(--text-muted);
+}
+
+.panel-row dd {
+  margin: 0;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.rules-list {
+  display: grid;
+  gap: 0.6rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.rule-item {
+  padding: 0.6rem 0.75rem;
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--pending);
+  border-radius: var(--radius-small);
+  background: var(--bg-soft);
+}
+
+.rule-ok {
+  border-left-color: var(--ok);
+}
+
+.rule-fail {
+  border-left-color: var(--error);
+}
+
+.rule-warning {
+  border-left-color: var(--warning);
+}
+
+.rule-header {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 0.25rem;
+}
+
+.rule-name {
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.rule-message,
+.rule-hint {
+  font-size: 0.85rem;
+}
+
+.rule-message {
+  color: var(--text-muted);
+}
+
+/* .panel na frente pra ganhar do "margin: 0" do .panel p */
+.panel .rule-hint {
+  margin-top: 0.25rem;
+  color: var(--text);
+}
+
 @media (max-width: 860px) {
   .simulator {
     grid-template-columns: 1fr;
@@ -570,6 +689,7 @@ fieldset.category {
 
   .summary {
     position: static;
+    max-height: none;
   }
 }
 

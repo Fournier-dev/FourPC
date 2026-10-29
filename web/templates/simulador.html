@@ -7,7 +7,8 @@
   <h1>Monte seu PC</h1>
   <p class="muted">
     Escolha uma peça de cada categoria, em qualquer ordem. O resumo do lado
-    é atualizado a cada escolha.
+    é atualizado a cada escolha, e as peças que não combinam com o que você
+    já escolheu aparecem marcadas em vermelho.
   </p>
 </div>
 
@@ -27,6 +28,21 @@
     </div>
     <p id="resumo-status" class="summary-status muted" aria-live="polite"></p>
     <p id="erro" class="error-message" role="alert" hidden></p>
+
+    <section class="panel" aria-labelledby="pagamento-titulo">
+      <h3 id="pagamento-titulo">Pagamento</h3>
+      <div id="painel-pagamento"></div>
+    </section>
+
+    <section class="panel" aria-labelledby="energia-titulo">
+      <h3 id="energia-titulo">Energia</h3>
+      <div id="painel-energia"></div>
+    </section>
+
+    <section class="panel" aria-labelledby="compatibilidade-titulo">
+      <h3 id="compatibilidade-titulo">Compatibilidade</h3>
+      <ul id="painel-regras" class="rules-list"></ul>
+    </section>
   </aside>
 </div>
 {% endblock %}

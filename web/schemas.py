@@ -214,3 +214,14 @@ class PresetOut(BaseModel):
             total=str(build.total_price),
             total_formatted=format_brl(build.total_price),
         )
+
+
+class ConflictsOut(BaseModel):
+    conflicts: dict[str, dict[str, list[str]]] = Field(
+        description="Para cada categoria (e 'extra_storage' pro segundo "
+        "disco), as peças que dariam erro se fossem escolhidas agora e as "
+        "regras que elas quebrariam. Peças sem conflito não aparecem.",
+        examples=[{
+            "motherboard": {"mb-b550m-aorus": ["Soquete CPU x Placa-Mãe"]},
+        }],
+    )

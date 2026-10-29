@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from fastapi import APIRouter, Request
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 
 from core.models import Category
@@ -79,3 +79,9 @@ def simulator(request: Request) -> HTMLResponse:
     return templates.TemplateResponse(
         request, "simulador.html", {"active": "simulador"}
     )
+
+
+# alguns navegadores pedem o /favicon.ico mesmo com o ícone no HTML
+@router.get("/favicon.ico")
+def favicon() -> RedirectResponse:
+    return RedirectResponse("/static/img/favicon.svg")
