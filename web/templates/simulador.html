@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+
+{% block title %}Simulador{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1>Monte seu PC</h1>
+  <p class="muted">
+    Escolha uma peça de cada categoria, em qualquer ordem. O resumo do lado
+    é atualizado a cada escolha.
+  </p>
+</div>
+
+<div class="simulator">
+  <div id="categorias" class="categories">
+    <p id="carregando" class="muted">Carregando o catálogo...</p>
+  </div>
+
+  <aside class="summary card" aria-labelledby="resumo-titulo">
+    <h2 id="resumo-titulo">Sua montagem</h2>
+    <ul id="resumo-pecas" class="summary-list" aria-live="polite">
+      <li class="muted">Nenhuma peça escolhida ainda.</li>
+    </ul>
+    <div class="summary-total">
+      <span>Total</span>
+      <strong id="resumo-total">R$ 0,00</strong>
+    </div>
+    <p id="resumo-status" class="summary-status muted" aria-live="polite"></p>
+    <p id="erro" class="error-message" role="alert" hidden></p>
+  </aside>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="/static/js/simulador.js" defer></script>
+{% endblock %}

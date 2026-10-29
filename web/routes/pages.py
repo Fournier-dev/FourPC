@@ -70,3 +70,12 @@ def home(request: Request, catalog: CatalogDep) -> HTMLResponse:
         "total_categories": len(Category),
         "total_rules": len(RULES),
     })
+
+
+# A página em si é só a estrutura: as peças são carregadas pelo JavaScript
+# a partir do /api/catalogo
+@router.get("/simulador", response_class=HTMLResponse)
+def simulator(request: Request) -> HTMLResponse:
+    return templates.TemplateResponse(
+        request, "simulador.html", {"active": "simulador"}
+    )
