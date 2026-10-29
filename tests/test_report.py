@@ -10,7 +10,8 @@ from core.models import Build
 from core.report import (
     BuildNotReadyError, ExportFormat, budget_warning, export_report, fit,
     format_brl, format_csv_number, format_price_diff, render_csv,
-    render_report, render_summary, status_message, to_dict,
+    component_attributes, render_report, render_summary, status_message,
+    to_dict,
 )
 from tests.helpers import (
     make_complete_build, make_cpu, make_gpu, make_motherboard, make_ram,
@@ -324,6 +325,18 @@ class ExtraStorageReportTest(unittest.TestCase):
         ))
 
         self.assertIn("Armazenamento 2", [row[0] for row in rows])
+
+
+class ComponentAttributesTest(unittest.TestCase):
+    def test_only_technical_data(self) -> None:
+        attributes = component_attributes(make_cpu("AM5", 120))
+
+        self.assertEqual(attributes, {"socket": "AM5", "tdp_watts": 120})
+
+    def test_enums_become_text(self) -> None:
+        attributes = component_attributes(make_motherboard())
+
+        self.assertEqual(attributes["ram_type"], "DDR5")
 
 
 if __name__ == "__main__":

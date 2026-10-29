@@ -148,6 +148,7 @@ Depois é só abrir http://127.0.0.1:8000/docs no navegador. Essa página é a d
 | Método | Rota | O que faz |
 |--------|------|-----------|
 | GET | `/api/saude` | Mostra se o servidor está no ar |
+| GET | `/api/catalogo` | Lista as peças por categoria, do mais barato pro mais caro, com preço e dados técnicos |
 
 Com as dependências instaladas, o `python -m unittest` também roda os testes da API. Sem elas, esses testes são pulados.
 
@@ -287,6 +288,7 @@ FourPC/
 │   └── presets.json     # montagens prontas (Básica, Intermediária...)
 ├── web/
 │   ├── app.py           # cria o app do FastAPI
+│   ├── schemas.py       # formato das respostas da API
 │   └── routes/api.py    # rotas da API
 ├── requirements.txt     # dependências da versão web
 ├── requirements-dev.txt # dependências pra testar e checar o código
