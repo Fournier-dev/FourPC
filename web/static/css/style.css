@@ -494,6 +494,60 @@ fieldset.category {
   white-space: nowrap;
 }
 
+/* montagens prontas, em cima das categorias */
+.presets {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.presets[hidden] {
+  display: none;
+}
+
+.presets h2 {
+  margin-bottom: 0.25rem;
+  font-size: 1.15rem;
+}
+
+.presets p {
+  margin: 0;
+}
+
+.preset-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.preset-button {
+  flex-direction: column;
+  gap: 0;
+  padding: 0.5rem 1rem;
+  line-height: 1.3;
+}
+
+.preset-total {
+  color: var(--accent-light);
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.button-small {
+  width: 100%;
+  margin-top: 0.75rem;
+  padding: 0.5rem 1rem;
+  font-size: 0.9rem;
+}
+
+.summary-note {
+  margin: 0.75rem 0 0;
+  font-size: 0.8rem;
+}
+
 /* resumo do lado, acompanha a rolagem da página (e rola sozinho se ficar
    maior que a tela) */
 .summary {

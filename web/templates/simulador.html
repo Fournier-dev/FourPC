@@ -12,6 +12,14 @@
   </p>
 </div>
 
+<section id="montagens-prontas" class="presets card" aria-labelledby="presets-titulo" hidden>
+  <div>
+    <h2 id="presets-titulo">Montagens prontas</h2>
+    <p class="muted">Não sabe por onde começar? Carregue uma e troque o que quiser.</p>
+  </div>
+  <div id="presets" class="preset-buttons"></div>
+</section>
+
 <div class="simulator">
   <div id="categorias" class="categories">
     <p id="carregando" class="muted">Carregando o catálogo...</p>
@@ -28,6 +36,13 @@
     </div>
     <p id="resumo-status" class="summary-status muted" aria-live="polite"></p>
     <p id="erro" class="error-message" role="alert" hidden></p>
+    <p class="summary-note muted">
+      A montagem fica guardada neste navegador, então dá pra fechar a
+      página e continuar depois.
+    </p>
+    <button id="limpar" class="button button-secondary button-small" type="button">
+      Limpar montagem
+    </button>
 
     <section class="panel" aria-labelledby="pagamento-titulo">
       <h3 id="pagamento-titulo">Pagamento</h3>
