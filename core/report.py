@@ -260,6 +260,17 @@ def _json_value(value: Any) -> Any:
     return value
 
 
+# só os dados técnicos da peça (soquete, consumo...), sem id, nome e preço.
+# A API usa isso pra mandar os detalhes de cada peça
+def component_attributes(component: Component) -> dict[str, Any]:
+    data = {
+        key: _json_value(value) for key, value in asdict(component).items()
+    }
+    for key in ("id", "name", "price"):
+        data.pop(key)
+    return data
+
+
 # o label vem de fora porque o segundo disco é "Armazenamento 2"
 def _component_to_dict(label: str, component: Component) -> dict[str, Any]:
     data: dict[str, Any] = {
