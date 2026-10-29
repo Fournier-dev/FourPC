@@ -143,7 +143,13 @@ uvicorn web.app:app --reload
 
 Também dá pra usar `python -m web`, que faz a mesma coisa.
 
-Depois é só abrir http://127.0.0.1:8000/docs no navegador. Essa página é a documentação da API, que o FastAPI gera sozinho, e dá pra testar cada rota por ali mesmo.
+Depois é só abrir http://127.0.0.1:8000 no navegador. O site tem:
+
+- **Página inicial** (`/`): explica o projeto e as regras que o FourPC verifica
+- **Simulador** (`/simulador`): dá pra escolher as peças (inclusive um segundo disco) e o resumo do lado mostra as peças escolhidas e o total
+- **Documentação da API** (`/docs`): o FastAPI gera essa página sozinho, e dá pra testar cada rota por ali mesmo
+
+O JavaScript do simulador não faz conta nenhuma: ele só chama a API, e quem confere a compatibilidade e calcula os preços é o mesmo código do programa de terminal.
 
 | Método | Rota | O que faz |
 |--------|------|-----------|

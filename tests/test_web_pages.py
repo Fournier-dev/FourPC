@@ -82,5 +82,27 @@ class HomePageTest(unittest.TestCase):
         self.assertIn("<strong>6</strong>", self.response.text)
 
 
+class SimulatorPageTest(unittest.TestCase):
+    def setUp(self) -> None:
+        self.client = TestClient(create_app(web_catalog()))
+
+    def test_simulator_page(self) -> None:
+        response = self.client.get("/simulador")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("Monte seu PC", response.text)
+        self.assertIn('src="/static/js/simulador.js"', response.text)
+        self.assertIn('id="resumo-total"', response.text)
+        self.assertIn('href="/simulador" aria-current="page"', response.text)
+
+    def test_script_is_served_and_uses_the_api(self) -> None:
+        response = self.client.get("/static/js/simulador.js")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("javascript", response.headers["content-type"])
+        self.assertIn("/api/catalogo", response.text)
+        self.assertIn("/api/montagens/validar", response.text)
+
+
 if __name__ == "__main__":
     unittest.main()
