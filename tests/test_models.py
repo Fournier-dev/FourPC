@@ -2,7 +2,9 @@ import unittest
 from dataclasses import fields
 from decimal import Decimal
 
-from core.models import Build, Category, FormFactor, format_capacity
+from core.models import (
+    EXTRA_STORAGE_LABEL, Build, Category, FormFactor, format_capacity,
+)
 from tests.helpers import (
     make_case, make_complete_build, make_cpu, make_gpu, make_motherboard,
     make_storage,
@@ -13,7 +15,8 @@ class CategoryTest(unittest.TestCase):
     def test_every_category_maps_to_a_build_field(self) -> None:
         build_fields = {field.name for field in fields(Build)}
         category_keys = {category.value for category in Category}
-        self.assertEqual(build_fields, category_keys)
+        # o segundo disco é o único campo que não é uma categoria
+        self.assertEqual(build_fields, category_keys | {"extra_storage"})
 
     def test_every_category_has_a_label(self) -> None:
         for category in Category:
@@ -121,6 +124,53 @@ class BuildTest(unittest.TestCase):
 
     def test_total_price_of_empty_build_is_zero(self) -> None:
         self.assertEqual(Build().total_price, Decimal("0"))
+
+
+class ExtraStorageTest(unittest.TestCase):
+    def setUp(self) -> None:
+        self.ssd = make_storage(component_id="ssd-1", price="500.00")
+        self.hd = make_storage(
+            component_id="hd-1", price="400.00", kind="HD"
+        )
+        self.build = (
+            make_complete_build()
+            .with_component(self.ssd)
+            .with_extra_storage(self.hd)
+        )
+
+    def test_extra_storage_is_optional(self) -> None:
+        build = make_complete_build()
+
+        self.assertIsNone(build.extra_storage)
+        self.assertTrue(build.is_complete)
+
+    def test_with_extra_storage_keeps_main_disk(self) -> None:
+        self.assertIs(self.build.storage, self.ssd)
+        self.assertIs(self.build.extra_storage, self.hd)
+        self.assertEqual(self.build.storages(), [self.ssd, self.hd])
+
+    def test_extra_disk_comes_right_after_the_main_one(self) -> None:
+        labels = [label for label, _ in self.build.labeled_components()]
+
+        index = labels.index(Category.STORAGE.label)
+        self.assertEqual(labels[index + 1], EXTRA_STORAGE_LABEL)
+        self.assertEqual(len(self.build.selected()), len(Category) + 1)
+
+    def test_total_includes_extra_disk(self) -> None:
+        # montagem completa (5.400,00) + 400,00 do HD
+        self.assertEqual(self.build.total_price, Decimal("5800.00"))
+
+    def test_removing_main_disk_promotes_extra(self) -> None:
+        build = self.build.without(Category.STORAGE)
+
+        self.assertIs(build.storage, self.hd)
+        self.assertIsNone(build.extra_storage)
+
+    def test_without_extra_storage(self) -> None:
+        build = self.build.without_extra_storage()
+
+        self.assertIs(build.storage, self.ssd)
+        self.assertIsNone(build.extra_storage)
 
 
 if __name__ == "__main__":

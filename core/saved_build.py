@@ -5,7 +5,7 @@ from pathlib import Path
 from typing import Any
 
 from core.catalog import Catalog
-from core.models import Build
+from core.models import MAX_STORAGE_DEVICES, Build, Storage
 
 
 class SavedBuildError(Exception):
@@ -47,6 +47,16 @@ def build_from_dict(data: Any, catalog: Catalog) -> LoadedBuild:
         category = entry.get("category")
         if category is not None and category != component.category.value:
             missing_ids.append(component_id)
+            continue
+        # no arquivo o disco principal vem primeiro, então se já tem um,
+        # esse é o segundo disco
+        if isinstance(component, Storage) and build.storage is not None:
+            if build.extra_storage is not None:
+                raise SavedBuildError(
+                    f"O orçamento tem mais de {MAX_STORAGE_DEVICES} "
+                    "dispositivos de armazenamento."
+                )
+            build = build.with_extra_storage(component)
             continue
         build = build.with_component(component)
     return LoadedBuild(build, missing_ids)

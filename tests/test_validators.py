@@ -249,6 +249,23 @@ class StorageKindWarningTest(unittest.TestCase):
         warnings = [result.rule for result in find_warnings(build)]
         self.assertEqual(warnings, [STORAGE_KIND_RULE])
 
+    def test_hd_as_second_disk_is_ok(self) -> None:
+        build = build_with(make_storage(kind="SSD NVMe")).with_extra_storage(
+            make_storage(kind="HD")
+        )
+
+        self.assertIs(check_storage_kind(build).status, Status.OK)
+
+    def test_suggests_swapping_when_second_disk_is_ssd(self) -> None:
+        ssd = make_storage(component_id="ssd-2", kind="SSD NVMe")
+        build = build_with(make_storage(kind="HD")).with_extra_storage(ssd)
+
+        result = check_storage_kind(build)
+
+        self.assertIs(result.status, Status.WARNING)
+        self.assertIn(ssd.name, result.hint)
+        self.assertIn("segundo disco", result.hint)
+
 
 class ValidateBuildTest(unittest.TestCase):
     def test_compatible_build_has_no_issues(self) -> None:

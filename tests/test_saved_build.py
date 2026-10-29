@@ -9,7 +9,7 @@ from core.catalog import Catalog
 from core.models import Category
 from core.report import to_dict
 from core.saved_build import SavedBuildError, build_from_dict, load_build
-from tests.helpers import make_complete_build, make_cpu
+from tests.helpers import make_complete_build, make_cpu, make_storage
 
 
 def catalog_of_complete_build() -> Catalog:
@@ -69,6 +69,26 @@ class BuildFromDictTest(unittest.TestCase):
             with self.subTest(data=data):
                 with self.assertRaises(SavedBuildError):
                     build_from_dict(data, catalog)
+
+    def test_round_trip_keeps_second_disk(self) -> None:
+        hd = make_storage(component_id="hd-1", kind="HD")
+        build = make_complete_build().with_extra_storage(hd)
+        components = {
+            c.category: [c] for c in make_complete_build().selected()
+        }
+        components[Category.STORAGE].append(hd)
+        data = json.loads(json.dumps(to_dict(build, datetime(2026, 1, 1))))
+
+        loaded = build_from_dict(data, Catalog(components))
+
+        self.assertEqual(loaded.build, build)
+
+    def test_more_than_two_disks_is_an_error(self) -> None:
+        disk = {"category": "storage", "id": "ssd-test"}
+        data = {"components": [disk, disk, disk]}
+
+        with self.assertRaises(SavedBuildError):
+            build_from_dict(data, catalog_of_complete_build())
 
 
 class LoadBuildTest(unittest.TestCase):

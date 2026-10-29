@@ -12,7 +12,9 @@ from pathlib import Path
 
 from core.catalog import DEFAULT_CATALOG_PATH, Catalog, CatalogError
 from core.colors import colorize, should_use_color
-from core.models import Build, Category, Component
+from core.models import (
+    EXTRA_STORAGE_LABEL, Build, Category, Component, Storage,
+)
 from core.presets import DEFAULT_PRESETS_PATH, PresetError, load_presets
 from core.pricing import parse_brl
 from core.saved_build import SavedBuildError, load_build
@@ -116,6 +118,8 @@ class FourPCApp:
                 self._choose_preset()
             elif choice == SAVED_REPORTS_OPTION:
                 self._list_saved_reports()
+            elif CATEGORIES[choice - 1] is Category.STORAGE:
+                self._choose_storage()
             else:
                 self._choose_component(CATEGORIES[choice - 1])
 
@@ -150,6 +154,11 @@ class FourPCApp:
                 price = format_brl(component.price)
             line = f"  {number}) {category.label:<16}{fit(name, 36):<36}"
             self._print(f"{line}{price:>15}".rstrip())
+            # o segundo disco aparece embaixo do principal, sem número
+            extra = self.build.extra_storage
+            if category is Category.STORAGE and extra is not None:
+                line = f"     {'+ 2º disco':<16}{fit(extra.name, 36):<36}"
+                self._print(f"{line}{format_brl(extra.price):>15}")
         self._print(THIN_LINE)
         total = format_brl(self.build.total_price)
         self._print(f"{'Total parcial':>20}{total:>52}")
@@ -183,13 +192,39 @@ class FourPCApp:
         self._print(f" {SAVED_REPORTS_OPTION}) Ver orçamentos salvos")
         self._print(f"  {EXIT_OPTION}) Sair")
 
-    def _choose_component(self, category: Category) -> None:
+    # Com o disco principal já escolhido, pergunta qual dos dois discos a
+    # pessoa quer mexer. Sem disco principal, vai direto pra ele.
+    def _choose_storage(self) -> None:
+        main_disk, extra = self.build.storage, self.build.extra_storage
+        if main_disk is None:
+            self._choose_component(Category.STORAGE)
+            return
+
+        extra_name = "(não selecionado)" if extra is None else extra.name
+        self._print("")
+        self._print(THIN_LINE)
+        self._print("ARMAZENAMENTO - qual disco você quer escolher?")
+        self._print(THIN_LINE)
+        self._print(f"  1) Disco principal: {main_disk.name}")
+        self._print(f"  2) Segundo disco (opcional): {extra_name}")
+        self._print("  0) Voltar")
+        choice = self._ask_option("Escolha uma opção: ", 2)
+        if choice == 1:
+            self._choose_component(Category.STORAGE)
+        elif choice == 2:
+            self._choose_component(Category.STORAGE, extra_slot=True)
+
+    # extra_slot=True é a tela do segundo disco (só no armazenamento)
+    def _choose_component(
+        self, category: Category, extra_slot: bool = False
+    ) -> None:
         options = self.catalog.options(category)
-        current = self.build.get(category)
+        current = self._current_part(category, extra_slot)
+        label = EXTRA_STORAGE_LABEL if extra_slot else category.label
 
         self._print("")
         self._print(THIN_LINE)
-        title = f"{category.label.upper()} - escolha uma opção"
+        title = f"{label.upper()} - escolha uma opção"
         if current is not None:
             title += "  (> = peça atual)"
         self._print(title)
@@ -215,7 +250,7 @@ class FourPCApp:
                 diff = format_price_diff(option.price - current.price)
                 self._print(f"      Diferença: {diff}")
             # avisa antes de escolher se a peça vai dar problema
-            for rule in self._conflicts_with(option):
+            for rule in self._conflicts_with(option, extra_slot):
                 self._print(f"      [!] Incompatível: {rule}")
         # a opção de remover só aparece se já tiver peça escolhida e fica
         # logo depois da última peça da lista
@@ -230,18 +265,44 @@ class FourPCApp:
         if choice == 0:
             return
         if current is not None and choice == remove_option:
-            self.build = self.build.without(category)
-            self._print(
-                f"\nPeça removida de {category.label}: {current.name}"
+            extra = self.build.extra_storage
+            removed_main_disk = (
+                category is Category.STORAGE and not extra_slot
             )
+            self.build = self._build_without(category, extra_slot)
+            self._print(f"\nPeça removida de {label}: {current.name}")
+            # o Build.without promove o segundo disco a principal
+            if removed_main_disk and extra is not None:
+                self._print(
+                    f"O segundo disco ({extra.name}) agora é o disco "
+                    "principal."
+                )
             return
         selected = options[choice - 1]
-        self.build = self.build.with_component(selected)
+        self.build = self._build_with(selected, extra_slot)
         self._print(
-            f"\nPeça selecionada em {category.label}: {selected.name} "
+            f"\nPeça selecionada em {label}: {selected.name} "
             f"({format_brl(selected.price)})"
         )
         self._show_alerts_for(category)
+
+    def _current_part(
+        self, category: Category, extra_slot: bool
+    ) -> Component | None:
+        if extra_slot:
+            return self.build.extra_storage
+        return self.build.get(category)
+
+    # o segundo disco tem métodos próprios na Build
+    def _build_with(self, component: Component, extra_slot: bool) -> Build:
+        if extra_slot and isinstance(component, Storage):
+            return self.build.with_extra_storage(component)
+        return self.build.with_component(component)
+
+    def _build_without(self, category: Category, extra_slot: bool) -> Build:
+        if extra_slot:
+            return self.build.without_extra_storage()
+        return self.build.without(category)
 
     def _show_alerts_for(self, category: Category) -> None:
         issues = []
@@ -472,8 +533,10 @@ class FourPCApp:
         self._print("Você pode trocar qualquer peça pelo menu.")
 
     # regras que dariam erro se essa peça fosse escolhida agora
-    def _conflicts_with(self, option: Component) -> list[str]:
-        test_build = self.build.with_component(option)
+    def _conflicts_with(
+        self, option: Component, extra_slot: bool = False
+    ) -> list[str]:
+        test_build = self._build_with(option, extra_slot)
         rules = []
         for issue in find_issues(test_build):
             if issue.involves(option.category):

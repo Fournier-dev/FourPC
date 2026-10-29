@@ -492,6 +492,42 @@ class FourPCAppTest(unittest.TestCase):
         self.assertEqual(session.output.count("Deseja mesmo sair?"), 2)
         self.assertIn("Até a próxima!", session.output)
 
+    def test_can_add_and_remove_second_disk(self) -> None:
+        inputs = select_all_first_options() + [
+            "6", "2", "2",  # armazenamento -> segundo disco -> ssd-2
+            "6", "2", "3",  # armazenamento -> segundo disco -> remover
+            "0", "s",
+        ]
+
+        session = self.run_app(inputs)
+
+        self.assertIn("Segundo disco (opcional)", session.output)
+        self.assertIn("+ 2º disco", session.output)
+        self.assertIn("Peça removida de Armazenamento 2", session.output)
+
+    def test_second_disk_goes_to_the_exported_json(self) -> None:
+        inputs = select_all_first_options() + ["6", "2", "2", "9", "2"]
+
+        self.run_app(inputs)
+
+        json_file = next(self.reports_dir.glob("*.json"))
+        data = json.loads(json_file.read_text(encoding="utf-8"))
+        disks = [c["id"] for c in data["components"]
+                 if c["category"] == "storage"]
+        self.assertEqual(disks, ["ssd-1", "ssd-2"])
+        self.assertEqual(data["total_price"], "5900.00")
+
+    def test_removing_main_disk_promotes_second_disk(self) -> None:
+        inputs = select_all_first_options() + [
+            "6", "2", "2",  # adiciona o segundo disco
+            "6", "1", "3",  # disco principal -> remover
+            "0", "s",
+        ]
+
+        session = self.run_app(inputs)
+
+        self.assertIn("agora é o disco principal", session.output)
+
 
 if __name__ == "__main__":
     unittest.main()

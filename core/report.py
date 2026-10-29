@@ -9,7 +9,7 @@ from enum import Enum
 from pathlib import Path
 from typing import Any
 
-from core.models import Build, Category, Component
+from core.models import EXTRA_STORAGE_LABEL, Build, Category, Component
 from core.pricing import PIX_DISCOUNT, budget_excess, payment_options
 from core.validators import (
     PSU_SAFETY_MARGIN, RuleResult, Status, check_all, estimated_load_watts,
@@ -126,6 +126,14 @@ def _budget_lines(build: Build, budget: Decimal | None) -> list[str]:
     return lines
 
 
+# linha com nome e preço, e embaixo as specs (se a peça tiver)
+def _component_rows(label: str, component: Component) -> list[str]:
+    rows = [_row(label, component.name, format_brl(component.price))]
+    if component.specs():
+        rows.append(_row("", component.specs()))
+    return rows
+
+
 def _components_section(
     build: Build, budget: Decimal | None = None
 ) -> list[str]:
@@ -135,11 +143,11 @@ def _components_section(
         if component is None:
             lines.append(_row(category.label, "(não selecionado)"))
             continue
-        lines.append(
-            _row(category.label, component.name, format_brl(component.price))
-        )
-        if component.specs():
-            lines.append(_row("", component.specs()))
+        lines += _component_rows(category.label, component)
+        # o segundo disco é opcional, então só aparece se tiver um
+        extra = build.extra_storage
+        if category is Category.STORAGE and extra is not None:
+            lines += _component_rows(EXTRA_STORAGE_LABEL, extra)
     lines.append(THIN_LINE)
     lines.append(_row("TOTAL", "", format_brl(build.total_price)))
     # só mostra as formas de pagamento quando tem alguma peça escolhida
@@ -252,10 +260,11 @@ def _json_value(value: Any) -> Any:
     return value
 
 
-def _component_to_dict(component: Component) -> dict[str, Any]:
+# o label vem de fora porque o segundo disco é "Armazenamento 2"
+def _component_to_dict(label: str, component: Component) -> dict[str, Any]:
     data: dict[str, Any] = {
         "category": component.category.value,
-        "category_label": component.category.label,
+        "category_label": label,
     }
     for key, value in asdict(component).items():
         data[key] = _json_value(value)
@@ -290,7 +299,10 @@ def to_dict(build: Build, generated_at: datetime) -> dict[str, Any]:
     return {
         "project": "FourPC",
         "generated_at": generated_at.isoformat(timespec="seconds"),
-        "components": [_component_to_dict(c) for c in build.selected()],
+        "components": [
+            _component_to_dict(label, component)
+            for label, component in build.labeled_components()
+        ],
         "power": power,
         "compatibility": compatibility,
         "total_price": str(total),
@@ -320,9 +332,9 @@ def render_csv(build: Build) -> str:
     buffer = io.StringIO()
     writer = csv.writer(buffer, delimiter=";", lineterminator="\n")
     writer.writerow(["Categoria", "Peça", "Especificações", "Preço (R$)"])
-    for component in build.selected():
+    for label, component in build.labeled_components():
         writer.writerow([
-            component.category.label,
+            label,
             component.name,
             component.specs(),
             format_csv_number(component.price),

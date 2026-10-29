@@ -188,10 +188,10 @@ def check_ram_capacity(build: Build) -> RuleResult:
 
 
 # Aviso 2: HD como disco principal deixa o sistema lento pra ligar e abrir
-# programas. Como a montagem só tem um disco, ele é sempre o principal.
+# programas. O segundo disco pode ser HD sem problema (é bom pra arquivos).
 def check_storage_kind(build: Build) -> RuleResult:
     involved = (Category.STORAGE,)
-    storage = build.storage
+    storage, extra = build.storage, build.extra_storage
     if storage is None:
         return RuleResult(
             STORAGE_KIND_RULE, involved, Status.PENDING,
@@ -203,12 +203,22 @@ def check_storage_kind(build: Build) -> RuleResult:
             f"O disco principal é um {storage.kind}, bom para o sistema "
             "ficar rápido.",
         )
+    # se o segundo disco já é um SSD, é só trocar a ordem dos dois
+    if extra is not None and not extra.is_hdd:
+        hint = (
+            f"escolha o {extra.name} como disco principal e deixe o HD "
+            "como segundo disco."
+        )
+    else:
+        hint = (
+            "prefira um SSD como disco principal (o HD é bom para guardar "
+            "arquivos)."
+        )
     return RuleResult(
         STORAGE_KIND_RULE, involved, Status.WARNING,
         f"O {storage.name} é um HD. Funciona, mas como disco principal "
         "deixa o sistema mais lento para ligar e abrir programas.",
-        "prefira um SSD como disco principal (o HD é bom para guardar "
-        "arquivos).",
+        hint,
     )
 
 

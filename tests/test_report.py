@@ -293,5 +293,38 @@ class ExportTest(unittest.TestCase):
             export_report(build, self.directory, ExportFormat.JSON)
 
 
+class ExtraStorageReportTest(unittest.TestCase):
+    def setUp(self) -> None:
+        hd = make_storage(component_id="hd-1", price="400.00", kind="HD")
+        self.build = make_complete_build().with_extra_storage(hd)
+
+    def test_summary_shows_second_disk(self) -> None:
+        summary = render_summary(self.build)
+
+        self.assertIn("Armazenamento 2", summary)
+        self.assertIn("R$ 5.800,00", summary)
+
+    def test_no_extra_row_without_second_disk(self) -> None:
+        summary = render_summary(make_complete_build())
+
+        self.assertNotIn("Armazenamento 2", summary)
+
+    def test_json_lists_both_disks(self) -> None:
+        data = to_dict(self.build, GENERATED_AT)
+
+        disks = [c for c in data["components"] if c["category"] == "storage"]
+        labels = [disk["category_label"] for disk in disks]
+        self.assertEqual(labels, ["Armazenamento", "Armazenamento 2"])
+        self.assertEqual(disks[1]["id"], "hd-1")
+        self.assertEqual(data["total_price"], "5800.00")
+
+    def test_csv_has_row_for_second_disk(self) -> None:
+        rows = list(csv.reader(
+            render_csv(self.build).splitlines(), delimiter=";"
+        ))
+
+        self.assertIn("Armazenamento 2", [row[0] for row in rows])
+
+
 if __name__ == "__main__":
     unittest.main()

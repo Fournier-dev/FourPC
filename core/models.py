@@ -165,6 +165,10 @@ def format_capacity(capacity_gb: int) -> str:
     return f"{terabytes.normalize():f} TB".replace(".", ",")
 
 
+EXTRA_STORAGE_LABEL = "Armazenamento 2"
+MAX_STORAGE_DEVICES = 2  # disco principal + 1 segundo disco opcional
+
+
 # A montagem guarda uma peça de cada categoria.
 # Deixei ela imutável (frozen=True): pra trocar uma peça eu crio uma Build
 # nova. Assim dá pra "testar" uma peça antes de escolher sem mexer na
@@ -178,14 +182,29 @@ class Build:
     psu: PSU | None = None
     storage: Storage | None = None
     case: Case | None = None
+    # O segundo disco é opcional (ex.: SSD pro sistema e HD pros arquivos).
+    # Não virou uma categoria nova porque a montagem fica completa sem ele.
+    extra_storage: Storage | None = None
 
     def with_component(self, component: Component) -> "Build":
         # se já tiver uma peça dessa categoria, ela é substituída
+        # (no armazenamento, isso troca o disco principal)
         changes: dict[str, Any] = {component.category.value: component}
         return replace(self, **changes)
 
+    def with_extra_storage(self, storage: Storage) -> "Build":
+        return replace(self, extra_storage=storage)
+
+    def without_extra_storage(self) -> "Build":
+        return replace(self, extra_storage=None)
+
     # mesma ideia do with_component: devolve uma Build nova sem a peça
     def without(self, category: Category) -> "Build":
+        # se tirar o disco principal e tiver um segundo disco, ele vira o
+        # principal, senão a montagem ficaria com só o "segundo" disco
+        if category is Category.STORAGE and self.extra_storage is not None:
+            return replace(self, storage=self.extra_storage,
+                           extra_storage=None)
         changes: dict[str, Any] = {category.value: None}
         return replace(self, **changes)
 
@@ -193,13 +212,25 @@ class Build:
         component: Component | None = getattr(self, category.value)
         return component
 
-    def selected(self) -> list[Component]:
-        components: list[Component] = []
+    # discos da montagem, o principal primeiro
+    def storages(self) -> list[Storage]:
+        return [s for s in (self.storage, self.extra_storage) if s is not None]
+
+    # peças com o nome que aparece no resumo, no CSV e no JSON
+    # (o segundo disco aparece como "Armazenamento 2")
+    def labeled_components(self) -> list[tuple[str, Component]]:
+        labeled: list[tuple[str, Component]] = []
         for category in Category:
             component = self.get(category)
             if component is not None:
-                components.append(component)
-        return components
+                labeled.append((category.label, component))
+            extra = self.extra_storage
+            if category is Category.STORAGE and extra is not None:
+                labeled.append((EXTRA_STORAGE_LABEL, extra))
+        return labeled
+
+    def selected(self) -> list[Component]:
+        return [component for _, component in self.labeled_components()]
 
     def missing_categories(self) -> list[Category]:
         return [cat for cat in Category if self.get(cat) is None]
