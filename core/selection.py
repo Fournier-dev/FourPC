@@ -2,6 +2,7 @@ from collections.abc import Mapping
 
 from core.catalog import Catalog
 from core.models import Build, Category, Component, Storage
+from core.validators import find_issues
 
 
 class SelectionError(ValueError):
@@ -52,3 +53,51 @@ def build_from_ids(
             )
         build = build.with_extra_storage(extra)
     return build
+
+
+# nome do grupo do segundo disco nos conflitos (as categorias usam a chave
+# delas, ex.: "cpu")
+EXTRA_STORAGE_GROUP = "extra_storage"
+
+
+# Regras que dariam erro se essa peça fosse escolhida agora (no lugar da
+# peça atual da categoria). Com extra_slot=True, testa como segundo disco.
+def conflicting_rules(
+    build: Build, option: Component, extra_slot: bool = False
+) -> list[str]:
+    if extra_slot and isinstance(option, Storage):
+        candidate = build.with_extra_storage(option)
+    else:
+        candidate = build.with_component(option)
+    return [
+        issue.rule for issue in find_issues(candidate)
+        if issue.involves(option.category)
+    ]
+
+
+def _conflicts_of(
+    build: Build, options: list[Component], extra_slot: bool
+) -> dict[str, list[str]]:
+    conflicts: dict[str, list[str]] = {}
+    for option in options:
+        rules = conflicting_rules(build, option, extra_slot)
+        if rules:
+            conflicts[option.id] = rules
+    return conflicts
+
+
+# Conflitos de todas as opções do catálogo, no formato que o site usa:
+# {"cpu": {"cpu-x": ["Soquete CPU x Placa-Mãe"]}, ...}. Só aparecem as
+# peças que têm algum conflito.
+def conflicts_by_option(
+    build: Build, catalog: Catalog
+) -> dict[str, dict[str, list[str]]]:
+    result: dict[str, dict[str, list[str]]] = {}
+    for category in Category:
+        result[category.value] = _conflicts_of(
+            build, catalog.options(category), False
+        )
+    result[EXTRA_STORAGE_GROUP] = _conflicts_of(
+        build, catalog.options(Category.STORAGE), True
+    )
+    return result

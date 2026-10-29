@@ -30,6 +30,14 @@ class LayoutTest(unittest.TestCase):
 
         self.assertEqual(response.status_code, 200)
 
+    def test_favicon_ico_points_to_the_svg(self) -> None:
+        response = self.client.get("/favicon.ico", follow_redirects=False)
+
+        self.assertEqual(response.status_code, 307)
+        self.assertEqual(
+            response.headers["location"], "/static/img/favicon.svg"
+        )
+
     def test_page_not_found_uses_the_site_layout(self) -> None:
         response = self.client.get("/pagina-que-nao-existe")
 
@@ -102,6 +110,14 @@ class SimulatorPageTest(unittest.TestCase):
         self.assertIn("javascript", response.headers["content-type"])
         self.assertIn("/api/catalogo", response.text)
         self.assertIn("/api/montagens/validar", response.text)
+        self.assertIn("/api/montagens/conflitos", response.text)
+
+    def test_simulator_has_the_panels(self) -> None:
+        response = self.client.get("/simulador")
+
+        for panel in ("painel-pagamento", "painel-energia", "painel-regras"):
+            with self.subTest(panel=panel):
+                self.assertIn(f'id="{panel}"', response.text)
 
 
 if __name__ == "__main__":

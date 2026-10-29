@@ -146,7 +146,7 @@ Também dá pra usar `python -m web`, que faz a mesma coisa.
 Depois é só abrir http://127.0.0.1:8000 no navegador. O site tem:
 
 - **Página inicial** (`/`): explica o projeto e as regras que o FourPC verifica
-- **Simulador** (`/simulador`): dá pra escolher as peças (inclusive um segundo disco) e o resumo do lado mostra as peças escolhidas e o total
+- **Simulador** (`/simulador`): dá pra escolher as peças (inclusive um segundo disco) e o resumo do lado mostra as peças escolhidas, o total, o preço no PIX e em 10x, o consumo de energia e o resultado de cada regra (com a sugestão de como corrigir). As peças que dariam erro com o que você já escolheu aparecem marcadas em vermelho antes de você escolher
 - **Documentação da API** (`/docs`): o FastAPI gera essa página sozinho, e dá pra testar cada rota por ali mesmo
 
 O JavaScript do simulador não faz conta nenhuma: ele só chama a API, e quem confere a compatibilidade e calcula os preços é o mesmo código do programa de terminal.
@@ -157,6 +157,7 @@ O JavaScript do simulador não faz conta nenhuma: ele só chama a API, e quem co
 | GET | `/api/catalogo` | Lista as peças por categoria, do mais barato pro mais caro, com preço e dados técnicos |
 | GET | `/api/presets` | Lista as montagens prontas sugeridas, com os IDs das peças e o total |
 | POST | `/api/montagens/validar` | Recebe o ID da peça de cada categoria e devolve as regras de compatibilidade, o consumo de energia e o preço (total, PIX e 10x) |
+| POST | `/api/montagens/conflitos` | Recebe a montagem atual e diz quais peças do catálogo dariam erro se fossem escolhidas agora (é o que o simulador usa pra marcar as opções) |
 
 Exemplo do que o `/api/montagens/validar` recebe (dá pra mandar a montagem incompleta, aí as regras das peças que faltam voltam como `pending`):
 

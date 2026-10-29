@@ -18,6 +18,7 @@ from core.models import (
 from core.presets import DEFAULT_PRESETS_PATH, PresetError, load_presets
 from core.pricing import parse_brl
 from core.saved_build import SavedBuildError, load_build
+from core.selection import conflicting_rules
 from core.saved_reports import list_saved_reports
 from core.report import (
     REPORT_WIDTH, THICK_LINE, THIN_LINE, ExportFormat, budget_warning,
@@ -250,7 +251,7 @@ class FourPCApp:
                 diff = format_price_diff(option.price - current.price)
                 self._print(f"      Diferença: {diff}")
             # avisa antes de escolher se a peça vai dar problema
-            for rule in self._conflicts_with(option, extra_slot):
+            for rule in conflicting_rules(self.build, option, extra_slot):
                 self._print(f"      [!] Incompatível: {rule}")
         # a opção de remover só aparece se já tiver peça escolhida e fica
         # logo depois da última peça da lista
@@ -531,17 +532,6 @@ class FourPCApp:
             f"({format_brl(preset.build.total_price)})."
         )
         self._print("Você pode trocar qualquer peça pelo menu.")
-
-    # regras que dariam erro se essa peça fosse escolhida agora
-    def _conflicts_with(
-        self, option: Component, extra_slot: bool = False
-    ) -> list[str]:
-        test_build = self._build_with(option, extra_slot)
-        rules = []
-        for issue in find_issues(test_build):
-            if issue.involves(option.category):
-                rules.append(issue.rule)
-        return rules
 
     # fica perguntando até a pessoa digitar um número válido
     def _ask_option(self, prompt: str, max_option: int) -> int:

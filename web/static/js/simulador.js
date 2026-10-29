@@ -5,6 +5,17 @@
 
 const EXTRA_STORAGE = "extra_storage";
 
+// texto e cor da etiqueta de cada status que a API devolve
+const STATUS_TAGS = {
+  fail: { text: "Erro", className: "tag-fail" },
+  warning: { text: "Aviso", className: "tag-warning" },
+  ok: { text: "OK", className: "tag-ok" },
+  pending: { text: "Pendente", className: "tag-pending" },
+};
+
+// no painel de compatibilidade os erros aparecem primeiro
+const STATUS_ORDER = { fail: 0, warning: 1, ok: 2, pending: 3 };
+
 // o que a pessoa escolheu: { cpu: "cpu-r5-7600", ... } + o segundo disco
 const state = {
   components: {},
@@ -22,6 +33,9 @@ const elements = {
   total: document.getElementById("resumo-total"),
   status: document.getElementById("resumo-status"),
   error: document.getElementById("erro"),
+  payment: document.getElementById("painel-pagamento"),
+  power: document.getElementById("painel-energia"),
+  rules: document.getElementById("painel-regras"),
 };
 
 // cria um elemento com classe e texto (textContent evita injetar HTML)
@@ -148,8 +162,9 @@ function onChoice(event) {
   refresh();
 }
 
-async function validateBuild() {
-  const response = await fetch("/api/montagens/validar", {
+// as duas rotas de montagem recebem a mesma coisa
+async function postBuild(url) {
+  const response = await fetch(url, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
@@ -186,15 +201,99 @@ function renderSummary(result) {
   elements.status.textContent = result.status_message;
 }
 
+// lista de "nome: valor" usada nos painéis de pagamento e energia
+function renderRows(container, rows) {
+  const list = createElement("dl", "panel-list");
+  for (const [label, value] of rows) {
+    const row = createElement("div", "panel-row");
+    row.append(createElement("dt", "", label), createElement("dd", "", value));
+    list.append(row);
+  }
+  container.replaceChildren(list);
+}
+
+function renderPayment(payment) {
+  renderRows(elements.payment, [
+    [`À vista no PIX (${payment.pix_discount_percent}% de desconto)`, payment.pix_price_formatted],
+    [`Ou em ${payment.installments}x sem juros de`, payment.installment_price_formatted],
+  ]);
+}
+
+function renderPower(power) {
+  if (!power) {
+    elements.power.replaceChildren(createElement(
+      "p",
+      "muted",
+      "Escolha o processador e a placa de vídeo para estimar o consumo.",
+    ));
+    return;
+  }
+  const hasPsu = power.psu_watts !== null;
+  renderRows(elements.power, [
+    ["Consumo estimado (CPU + GPU)", `${power.estimated_load_watts} W`],
+    ["Fonte mínima recomendada", `${power.required_psu_watts} W`],
+    ["Fonte escolhida", hasPsu ? `${power.psu_watts} W` : "-"],
+    ["Folga da fonte", hasPsu ? `${power.psu_headroom_percent}%` : "-"],
+  ]);
+}
+
+function renderRules(rules) {
+  const sorted = [...rules].sort(
+    (a, b) => STATUS_ORDER[a.status] - STATUS_ORDER[b.status],
+  );
+  elements.rules.replaceChildren();
+  for (const rule of sorted) {
+    const tag = STATUS_TAGS[rule.status];
+    const item = createElement("li", `rule-item rule-${rule.status}`);
+    const header = createElement("div", "rule-header");
+    header.append(
+      createElement("span", `tag ${tag.className}`, tag.text),
+      createElement("span", "rule-name", rule.rule),
+    );
+    item.append(header, createElement("p", "rule-message", rule.message));
+    if (rule.hint && (rule.status === "fail" || rule.status === "warning")) {
+      item.append(createElement("p", "rule-hint", `Sugestão: ${rule.hint}`));
+    }
+    elements.rules.append(item);
+  }
+}
+
+// marca de vermelho as peças que dariam erro se fossem escolhidas agora
+function renderConflicts(conflicts) {
+  for (const option of elements.categories.querySelectorAll(".option[data-id]")) {
+    const group = option.closest("fieldset").dataset.group;
+    const rules = (conflicts[group] || {})[option.dataset.id];
+    const info = option.querySelector(".option-info");
+
+    info.querySelector(".option-conflict-text")?.remove();
+    option.classList.toggle("option-conflict", Boolean(rules));
+    if (rules) {
+      info.append(createElement(
+        "span",
+        "option-conflict-text",
+        `Incompatível: ${rules.join(", ")}`,
+      ));
+    }
+  }
+}
+
 async function refresh() {
   const request = ++lastRequest;
   try {
-    const result = await validateBuild();
+    // as duas chamadas saem juntas pra não esperar uma pela outra
+    const [result, conflicts] = await Promise.all([
+      postBuild("/api/montagens/validar"),
+      postBuild("/api/montagens/conflitos"),
+    ]);
     if (request !== lastRequest) {
       return;
     }
     hideError();
     renderSummary(result);
+    renderPayment(result.payment);
+    renderPower(result.power);
+    renderRules(result.rules);
+    renderConflicts(conflicts.conflicts);
   } catch (error) {
     if (request === lastRequest) {
       showError(error.message);
