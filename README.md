@@ -117,12 +117,14 @@ Depois de escolher um processador AM5, as placas-mãe de outro soquete aparecem 
 ------------------------------------------------------------------------
 PLACA-MÃE - escolha uma opção
 ------------------------------------------------------------------------
-   1) Gigabyte B550M Aorus Elite      AM4 · DDR4 · mATX        R$ 799,90
+   1) ASUS Prime A520M-K              AM4 · DDR4 · mATX        R$ 499,90
       [!] Incompatível: Soquete CPU x Placa-Mãe
-   2) MSI PRO B760M-A DDR4            LGA1700 · DDR4 · mATX    R$ 899,90
+   2) Gigabyte B550M Aorus Elite      AM4 · DDR4 · mATX        R$ 799,90
       [!] Incompatível: Soquete CPU x Placa-Mãe
-   3) ASRock B650M Pro RS             AM5 · DDR5 · mATX      R$ 1.099,90
-   4) MSI MAG B650 Tomahawk WiFi      AM5 · DDR5 · ATX       R$ 1.699,90
+   3) MSI PRO B760M-A DDR4            LGA1700 · DDR4 · mATX    R$ 899,90
+      [!] Incompatível: Soquete CPU x Placa-Mãe
+   4) ASRock B650M Pro RS             AM5 · DDR5 · mATX      R$ 1.099,90
+   5) MSI MAG B650 Tomahawk WiFi      AM5 · DDR5 · ATX       R$ 1.699,90
    ...
    0) Voltar
 ```
@@ -241,7 +243,9 @@ FourPC/
 ├── data/
 │   ├── catalog.json     # catálogo de peças
 │   └── presets.json     # montagens prontas (Básica, Intermediária...)
-└── tests/               # testes
+├── tests/               # testes
+└── .github/workflows/
+    └── testes.yml       # roda os testes no GitHub Actions a cada push
 ```
 
 Pra adicionar uma peça nova é só colocar ela no `data/catalog.json`, seguindo o formato das outras da mesma categoria. As placas-mãe têm o campo `form_factor` (`ATX`, `mATX` ou `ITX`) e os gabinetes têm a lista `supported_form_factors` com os formatos de placa que cabem neles.
