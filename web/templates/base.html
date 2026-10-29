@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Simulador de Montagem de PC{% endblock %} | FourPC</title>
+  <meta name="description" content="Monte seu PC escolhendo as peças e veja na hora se elas são compatíveis.">
+  <link rel="icon" href="/static/img/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+  <a class="skip-link" href="#conteudo">Pular para o conteúdo</a>
+
+  <header class="site-header">
+    <div class="container header-inner">
+      <a class="logo" href="/" aria-label="FourPC, página inicial">Four<span>PC</span></a>
+      <nav aria-label="Menu principal">
+        <ul class="nav-links">
+          <li><a href="/"{% if active == "inicio" %} aria-current="page"{% endif %}>Início</a></li>
+          <li><a href="/simulador"{% if active == "simulador" %} aria-current="page"{% endif %}>Simulador</a></li>
+          <li><a href="/docs">API</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <main id="conteudo" class="container">
+    {% block content %}{% endblock %}
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <p>
+        Feito por <a href="https://github.com/Fournier-dev">Fournier-dev</a>
+        · <a href="https://github.com/Fournier-dev/FourPC">Código no GitHub</a>
+      </p>
+      <p class="muted">Preços e consumos são estimativas para fins de simulação.</p>
+    </div>
+  </footer>
+
+  {% block scripts %}{% endblock %}
+</body>
+</html>

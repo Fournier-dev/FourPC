@@ -302,7 +302,11 @@ FourPC/
 ├── web/
 │   ├── app.py           # cria o app do FastAPI
 │   ├── schemas.py       # formato das respostas da API
-│   └── routes/api.py    # rotas da API
+│   ├── routes/
+│   │   ├── api.py       # rotas da API
+│   │   └── pages.py     # páginas do site
+│   ├── templates/       # HTML das páginas (Jinja2)
+│   └── static/          # CSS, JavaScript e imagens
 ├── requirements.txt     # dependências da versão web
 ├── requirements-dev.txt # dependências pra testar e checar o código
 ├── tests/               # testes
