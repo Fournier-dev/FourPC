@@ -149,6 +149,19 @@ Depois é só abrir http://127.0.0.1:8000/docs no navegador. Essa página é a d
 |--------|------|-----------|
 | GET | `/api/saude` | Mostra se o servidor está no ar |
 | GET | `/api/catalogo` | Lista as peças por categoria, do mais barato pro mais caro, com preço e dados técnicos |
+| GET | `/api/presets` | Lista as montagens prontas sugeridas, com os IDs das peças e o total |
+| POST | `/api/montagens/validar` | Recebe o ID da peça de cada categoria e devolve as regras de compatibilidade, o consumo de energia e o preço (total, PIX e 10x) |
+
+Exemplo do que o `/api/montagens/validar` recebe (dá pra mandar a montagem incompleta, aí as regras das peças que faltam voltam como `pending`):
+
+```json
+{
+  "components": {"cpu": "cpu-r5-7600", "motherboard": "mb-b650m-pro-rs"},
+  "extra_storage": null
+}
+```
+
+Se algum ID não existir ou for de outra categoria, a API responde com erro 422 e uma mensagem em português explicando o problema.
 
 Com as dependências instaladas, o `python -m unittest` também roda os testes da API. Sem elas, esses testes são pulados.
 
