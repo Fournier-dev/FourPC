@@ -280,6 +280,112 @@ main.container {
   color: var(--pending);
 }
 
+/* Página inicial */
+
+.hero {
+  padding: 3rem 0 2rem;
+  text-align: center;
+}
+
+.eyebrow {
+  margin-bottom: 0.5rem;
+  color: var(--accent-light);
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.hero h1 {
+  font-size: clamp(2rem, 6vw, 3.4rem);
+  font-weight: 800;
+}
+
+.neon {
+  color: var(--accent);
+  text-shadow: 0 0 24px var(--accent-glow);
+}
+
+.hero-text {
+  max-width: 640px;
+  margin: 0 auto 1.75rem;
+  color: var(--text-muted);
+  font-size: 1.15rem;
+}
+
+.hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.75rem;
+}
+
+.stats {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.75rem 2rem;
+  margin: 2.5rem 0 0;
+  padding: 0;
+  list-style: none;
+  color: var(--text-muted);
+}
+
+.stats strong {
+  display: block;
+  color: var(--text);
+  font-size: 1.8rem;
+  line-height: 1.1;
+}
+
+.section {
+  margin-top: 3.5rem;
+}
+
+.section h2 {
+  font-size: 1.6rem;
+}
+
+.card-grid,
+.steps {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 1rem;
+  margin: 1.25rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.rule-card h3 {
+  margin-top: 0.75rem;
+  font-size: 1.1rem;
+}
+
+.rule-card p,
+.steps p {
+  margin: 0;
+}
+
+/* os passos ganham um número roxo grande antes do título */
+.steps {
+  counter-reset: passo;
+}
+
+.steps li {
+  counter-increment: passo;
+}
+
+.steps h3::before {
+  content: counter(passo) ". ";
+  color: var(--accent);
+}
+
+.cta {
+  margin-top: 3.5rem;
+  text-align: center;
+  border-color: var(--accent-button);
+}
+
 /* Página de erro */
 
 .error-page {
