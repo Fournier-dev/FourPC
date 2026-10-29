@@ -1,0 +1,6 @@
+# tudo do requirements.txt + o que eu uso pra testar e checar o código
+-r requirements.txt
+httpx>=0.28,<1
+mypy>=2.0,<3
+pycodestyle>=2.15,<3
+ruff>=0.17,<1

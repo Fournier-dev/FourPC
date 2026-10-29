@@ -1,0 +1,4 @@
+# dependências da versão web (o programa de terminal não precisa de nada)
+fastapi>=0.160,<1
+uvicorn[standard]>=0.50,<1
+jinja2>=3.1,<4
