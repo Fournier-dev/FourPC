@@ -1,5 +1,7 @@
 # FourPC
 
+![Testes](https://github.com/Fournier-dev/FourPC/actions/workflows/testes.yml/badge.svg)
+
 Simulador de montagem de PC feito em Python, que roda no terminal.
 
 Fiz esse projeto pra praticar Python e lógica de programação. Quem vai montar o primeiro PC costuma ter várias dúvidas: esse processador encaixa nessa placa-mãe? Essa memória é compatível? Essa fonte aguenta a placa de vídeo?
@@ -104,6 +106,8 @@ Também fiz alguns testes com o `unittest` pra conferir as regras, os preços e 
 ```bash
 python -m unittest
 ```
+
+Os testes também rodam sozinhos no GitHub Actions a cada push, no Python 3.10 (a versão mínima) e no 3.12. O selo "Testes" no começo desse README mostra se a última execução passou.
 
 ## Como ficou
 
