@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="hero">
+  <p class="eyebrow">Simulador de montagem de PC</p>
+  <h1>Monte seu PC <span class="neon">sem medo de errar</span></h1>
+  <p class="hero-text">
+    Escolha as peças e o FourPC confere na hora se elas funcionam juntas.
+    No final você vê o orçamento com o preço à vista no PIX e parcelado.
+  </p>
+  <div class="hero-actions">
+    <a class="button" href="/simulador">Montar meu PC</a>
+    <a class="button button-secondary" href="/docs">Ver a API</a>
+  </div>
+  <ul class="stats" aria-label="O FourPC em números">
+    <li><strong>{{ total_parts }}</strong> peças no catálogo</li>
+    <li><strong>{{ total_categories }}</strong> categorias</li>
+    <li><strong>{{ total_rules }}</strong> regras de compatibilidade</li>
+  </ul>
+</section>
+
+<section class="section" aria-labelledby="o-que-e">
+  <h2 id="o-que-e">O que é</h2>
+  <p>
+    Quem vai montar o primeiro PC costuma ter várias dúvidas: esse processador
+    encaixa nessa placa-mãe? Essa memória é compatível? Essa fonte aguenta a
+    placa de vídeo? O FourPC responde isso enquanto você escolhe as peças.
+  </p>
+  <p class="muted">
+    Comecei o projeto como um programa de terminal em Python. O site usa as
+    mesmas regras, então os dois sempre dão o mesmo resultado.
+  </p>
+</section>
+
+<section class="section" aria-labelledby="regras">
+  <h2 id="regras">O que o FourPC verifica</h2>
+  <p class="muted">
+    Os erros impedem de finalizar a montagem. Os avisos só chamam atenção pra
+    algo que pode ser melhorado.
+  </p>
+  <ul class="card-grid">
+    {% for rule in rules %}
+    <li class="card rule-card">
+      {% if rule.blocks %}
+      <span class="tag tag-fail">Erro</span>
+      {% else %}
+      <span class="tag tag-warning">Aviso</span>
+      {% endif %}
+      <h3>{{ rule.name }}</h3>
+      <p class="muted">{{ rule.description }}</p>
+    </li>
+    {% endfor %}
+  </ul>
+</section>
+
+<section class="section" aria-labelledby="como-funciona">
+  <h2 id="como-funciona">Como funciona</h2>
+  <ol class="steps">
+    <li class="card">
+      <h3>Escolha as peças</h3>
+      <p class="muted">Uma de cada categoria, em qualquer ordem. Dá pra adicionar um segundo disco.</p>
+    </li>
+    <li class="card">
+      <h3>Veja os alertas na hora</h3>
+      <p class="muted">As peças que não combinam com o que você já escolheu aparecem marcadas antes da escolha.</p>
+    </li>
+    <li class="card">
+      <h3>Confira o orçamento</h3>
+      <p class="muted">Total, preço no PIX com desconto, parcelas e o consumo de energia da montagem.</p>
+    </li>
+  </ol>
+</section>
+
+<section class="cta card">
+  <h2>Pronto pra começar?</h2>
+  <p class="muted">Se não souber por onde começar, tem montagens prontas pra usar de base.</p>
+  <a class="button" href="/simulador">Montar meu PC</a>
+</section>
+{% endblock %}

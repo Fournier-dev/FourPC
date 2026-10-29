@@ -2,7 +2,7 @@ from pathlib import Path
 
 from fastapi import FastAPI, Request
 from fastapi.exception_handlers import http_exception_handler
-from fastapi.responses import JSONResponse, RedirectResponse, Response
+from fastapi.responses import JSONResponse, Response
 from fastapi.staticfiles import StaticFiles
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
@@ -30,11 +30,6 @@ def create_app(
     app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
     app.include_router(api.router)
     app.include_router(pages.router)
-
-    # enquanto o site não tem página inicial, a raiz leva pra documentação
-    @app.get("/", include_in_schema=False)
-    def home() -> RedirectResponse:
-        return RedirectResponse("/docs")
 
     # Endereço que não existe: no site mostra a página 404 com o visual do
     # site e na API responde em JSON. Os outros erros (como o 422 da

@@ -1,25 +1,13 @@
 from pathlib import Path
-from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi import APIRouter, HTTPException, Request
 
-from core.catalog import Catalog
 from core.presets import PresetError, load_presets
 from core.selection import SelectionError, build_from_ids
+from web.dependencies import CatalogDep
 from web.schemas import BuildIn, CatalogOut, PresetOut, ValidationOut
 
 router = APIRouter(prefix="/api", tags=["API"])
-
-
-# O catálogo é carregado uma vez só, quando o app sobe, e fica guardado no
-# app.state. As rotas pegam ele por aqui (nos testes dá pra trocar por um
-# catálogo menor).
-def get_catalog(request: Request) -> Catalog:
-    catalog: Catalog = request.app.state.catalog
-    return catalog
-
-
-CatalogDep = Annotated[Catalog, Depends(get_catalog)]
 
 
 # rota simples pra saber se o servidor está no ar

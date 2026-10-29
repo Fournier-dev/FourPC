@@ -33,12 +33,6 @@ class AppTest(unittest.TestCase):
 
         self.assertIn("/api/saude", schema["paths"])
 
-    def test_root_redirects_to_docs(self) -> None:
-        response = self.client.get("/", follow_redirects=False)
-
-        self.assertEqual(response.status_code, 307)
-        self.assertEqual(response.headers["location"], "/docs")
-
 
 if __name__ == "__main__":
     unittest.main()

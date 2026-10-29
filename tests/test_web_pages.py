@@ -7,6 +7,8 @@ except ImportError:
         "FastAPI não instalado (pip install -r requirements-dev.txt)"
     )
 
+from core.models import Build
+from core.validators import RULES
 from tests.web_helpers import web_catalog
 from web.app import create_app
 
@@ -51,6 +53,33 @@ class LayoutTest(unittest.TestCase):
 
         self.assertEqual(response.status_code, 422)
         self.assertIn("não existe", response.json()["detail"])
+
+
+class HomePageTest(unittest.TestCase):
+    def setUp(self) -> None:
+        self.client = TestClient(create_app(web_catalog()))
+        self.response = self.client.get("/")
+
+    def test_home_page(self) -> None:
+        self.assertEqual(self.response.status_code, 200)
+        self.assertIn("text/html", self.response.headers["content-type"])
+        self.assertIn("Montar meu PC", self.response.text)
+        self.assertIn('href="/simulador"', self.response.text)
+        self.assertIn('href="/docs"', self.response.text)
+
+    def test_menu_marks_the_current_page(self) -> None:
+        self.assertIn('href="/" aria-current="page"', self.response.text)
+
+    def test_shows_every_rule_from_core(self) -> None:
+        for rule in RULES:
+            with self.subTest(rule=rule.__name__):
+                name = rule(Build()).rule
+                self.assertIn(name, self.response.text)
+
+    def test_numbers_come_from_the_catalog(self) -> None:
+        # o catálogo dos testes tem 14 peças e são 6 regras
+        self.assertIn("<strong>14</strong>", self.response.text)
+        self.assertIn("<strong>6</strong>", self.response.text)
 
 
 if __name__ == "__main__":
