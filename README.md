@@ -146,7 +146,7 @@ Também dá pra usar `python -m web`, que faz a mesma coisa.
 Depois é só abrir http://127.0.0.1:8000 no navegador. O site tem:
 
 - **Página inicial** (`/`): explica o projeto e as regras que o FourPC verifica
-- **Simulador** (`/simulador`): dá pra escolher as peças (inclusive um segundo disco) e o resumo do lado mostra as peças escolhidas, o total, o preço no PIX e em 10x, o consumo de energia e o resultado de cada regra (com a sugestão de como corrigir). As peças que dariam erro com o que você já escolheu aparecem marcadas em vermelho antes de você escolher
+- **Simulador** (`/simulador`): dá pra escolher as peças (inclusive um segundo disco) e o resumo do lado mostra as peças escolhidas, o total, o preço no PIX e em 10x, o consumo de energia e o resultado de cada regra (com a sugestão de como corrigir). As peças que dariam erro com o que você já escolheu aparecem marcadas em vermelho antes de você escolher. Também dá pra carregar uma das montagens prontas (Básica, Intermediária ou Avançada) e trocar o que quiser. A montagem fica guardada no navegador (`localStorage`), então dá pra fechar a página e continuar depois, e o botão "Limpar montagem" começa do zero
 - **Documentação da API** (`/docs`): o FastAPI gera essa página sozinho, e dá pra testar cada rota por ali mesmo
 
 O JavaScript do simulador não faz conta nenhuma: ele só chama a API, e quem confere a compatibilidade e calcula os preços é o mesmo código do programa de terminal.

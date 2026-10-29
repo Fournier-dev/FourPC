@@ -4,6 +4,8 @@
 // usa o mesmo código do programa de terminal (pasta core/).
 
 const EXTRA_STORAGE = "extra_storage";
+// chave onde a montagem fica guardada no navegador
+const STORAGE_KEY = "fourpc:montagem";
 
 // texto e cor da etiqueta de cada status que a API devolve
 const STATUS_TAGS = {
@@ -36,6 +38,9 @@ const elements = {
   payment: document.getElementById("painel-pagamento"),
   power: document.getElementById("painel-energia"),
   rules: document.getElementById("painel-regras"),
+  presetsSection: document.getElementById("montagens-prontas"),
+  presets: document.getElementById("presets"),
+  clear: document.getElementById("limpar"),
 };
 
 // cria um elemento com classe e texto (textContent evita injetar HTML)
@@ -159,7 +164,116 @@ function onChoice(event) {
     state.components[input.name] = input.value;
   }
   updateExtraStorageAvailability();
+  saveState();
   refresh();
+}
+
+function hasChoices() {
+  return Object.keys(state.components).length > 0 || state.extraStorage !== null;
+}
+
+// deixa os radios marcados de acordo com o state (usado quando a montagem
+// muda sem a pessoa clicar: montagem pronta, limpar ou montagem salva)
+function syncInputs() {
+  for (const input of elements.categories.querySelectorAll('input[type="radio"]')) {
+    if (input.name === EXTRA_STORAGE) {
+      input.checked = input.value === (state.extraStorage || "");
+    } else {
+      input.checked = input.value === state.components[input.name];
+    }
+  }
+}
+
+function applyBuild(components, extraStorage) {
+  state.components = { ...components };
+  state.extraStorage = extraStorage || null;
+  syncInputs();
+  updateExtraStorageAvailability();
+  saveState();
+  refresh();
+}
+
+// Guarda a montagem no navegador. Se o navegador bloquear (em aba anônima,
+// por exemplo), o simulador funciona igual, só não lembra da montagem.
+function saveState() {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  } catch {
+    // sem localStorage, segue sem salvar
+  }
+}
+
+// IDs de peça que existem no catálogo, por grupo
+function catalogIds(group) {
+  const key = group === EXTRA_STORAGE ? "storage" : group;
+  const category = catalog.find((item) => item.category === key);
+  return new Set(category ? category.components.map((c) => c.id) : []);
+}
+
+// Lê a montagem salva. Peças que não existem mais no catálogo (ou um
+// segundo disco sem disco principal) são deixadas de fora.
+function loadSavedState() {
+  let saved;
+  try {
+    saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || "null");
+  } catch {
+    return null;
+  }
+  if (!saved || typeof saved.components !== "object" || saved.components === null) {
+    return null;
+  }
+  const components = {};
+  for (const [group, id] of Object.entries(saved.components)) {
+    if (catalogIds(group).has(id)) {
+      components[group] = id;
+    }
+  }
+  let extraStorage = saved.extraStorage;
+  if (!components.storage || !catalogIds(EXTRA_STORAGE).has(extraStorage)) {
+    extraStorage = null;
+  }
+  return { components, extraStorage };
+}
+
+async function loadPresets() {
+  const response = await fetch("/api/presets");
+  if (!response.ok) {
+    return [];
+  }
+  return response.json();
+}
+
+function choosePreset(preset) {
+  if (hasChoices() && !confirm(`Trocar a montagem atual pela montagem ${preset.name}?`)) {
+    return;
+  }
+  applyBuild(preset.components, preset.extra_storage);
+}
+
+// sem montagens prontas o simulador funciona igual, a seção só fica escondida
+function renderPresets(presets) {
+  if (presets.length === 0) {
+    return;
+  }
+  for (const preset of presets) {
+    const button = createElement("button", "button button-secondary preset-button");
+    button.type = "button";
+    button.title = preset.description;
+    button.append(
+      createElement("span", "preset-name", preset.name),
+      createElement("span", "preset-total", preset.total_formatted),
+    );
+    button.addEventListener("click", () => choosePreset(preset));
+    elements.presets.append(button);
+  }
+  elements.presetsSection.hidden = false;
+}
+
+function clearBuild() {
+  if (!hasChoices() || !confirm("Limpar todas as peças escolhidas?")) {
+    return;
+  }
+  applyBuild({}, null);
 }
 
 // as duas rotas de montagem recebem a mesma coisa
@@ -309,9 +423,17 @@ async function start() {
     return;
   }
   renderCategories();
+  const saved = loadSavedState();
+  if (saved) {
+    state.components = saved.components;
+    state.extraStorage = saved.extraStorage;
+    syncInputs();
+  }
   updateExtraStorageAvailability();
   elements.categories.addEventListener("change", onChoice);
+  elements.clear.addEventListener("click", clearBuild);
   refresh();
+  loadPresets().then(renderPresets).catch(() => {});
 }
 
 start();

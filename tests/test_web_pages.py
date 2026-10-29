@@ -119,6 +119,18 @@ class SimulatorPageTest(unittest.TestCase):
             with self.subTest(panel=panel):
                 self.assertIn(f'id="{panel}"', response.text)
 
+    def test_simulator_has_presets_and_clear_button(self) -> None:
+        response = self.client.get("/simulador")
+
+        self.assertIn('id="montagens-prontas"', response.text)
+        self.assertIn('id="limpar"', response.text)
+
+    def test_script_loads_presets_and_saves_the_build(self) -> None:
+        script = self.client.get("/static/js/simulador.js").text
+
+        self.assertIn("/api/presets", script)
+        self.assertIn("localStorage", script)
+
 
 if __name__ == "__main__":
     unittest.main()
