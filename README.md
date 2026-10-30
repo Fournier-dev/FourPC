@@ -151,6 +151,21 @@ Depois é só abrir http://127.0.0.1:8000 no navegador. O site tem:
 
 O JavaScript do simulador não faz conta nenhuma: ele só chama a API, e quem confere a compatibilidade e calcula os preços é o mesmo código do programa de terminal.
 
+### Banco de dados
+
+A versão web já tem um banco de dados pra guardar as montagens (as rotas pra salvar e abrir uma montagem pelo site ainda vão vir). Usei o [SQLAlchemy](https://www.sqlalchemy.org/) e, por padrão, o banco é um arquivo SQLite chamado `fourpc.db`, criado na pasta de onde o servidor foi iniciado (ele está no `.gitignore`). As tabelas são criadas sozinhas quando o servidor sobe:
+
+- `montagens`: uma linha por montagem salva, com o código curto dela (ex.: `K7MX2P`), a data e o total
+- `montagem_pecas`: uma linha pra cada peça da montagem, com a categoria, a posição (1 pro disco principal e 2 pro segundo disco) e o ID da peça
+
+Pra usar outro banco, é só definir a variável de ambiente `DATABASE_URL` antes de subir o servidor. No Windows (PowerShell):
+
+```bash
+$env:DATABASE_URL = "sqlite:///outro.db"
+```
+
+Nos testes eu uso um SQLite em memória, então eles não criam nenhum arquivo.
+
 | Método | Rota | O que faz |
 |--------|------|-----------|
 | GET | `/api/saude` | Mostra se o servidor está no ar |
