@@ -36,3 +36,6 @@ Thumbs.db
 
 # Orçamentos gerados pelo programa
 reports/
+
+# Banco SQLite local da versão web
+*.db
